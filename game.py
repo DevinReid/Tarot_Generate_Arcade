@@ -23,7 +23,7 @@ INTRO_TEXT = (
 
 CATEGORIES = ["Love Life", "Professional Development", "Family and Friends", "Health", "Personal Growth", "Gain Clarity"]
 
-class GameState(Enum):
+class GameState(Enum): #UPDATE THIS TO BE IN CORRECT ORDER 
     INTRO = 1,
     DRAWN = 2,
     LOADING = 3,
