@@ -1,9 +1,12 @@
 from enum import Enum
-from game import CATEGORIES
+
 import text_utility as TEXT
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 960
+
+CATEGORIES = ["Love Life", "Professional Development", "Family and Friends", "Health", "Personal Growth", "Gain Clarity"]
+
 
 """"""
 

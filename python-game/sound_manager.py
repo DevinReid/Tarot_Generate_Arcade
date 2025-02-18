@@ -1,4 +1,6 @@
 import arcade
+import resource_path
+
 
 class SoundManager:
     def __init__(self, music_file_path):
@@ -58,7 +60,7 @@ class SoundManager:
         file_path (str): Path to the audio file, e.g. 'assets/sfx/card_draw.wav'
         """
         try:
-            sfx_sound = arcade.load_sound(file_path)
+            sfx_sound = arcade.load_sound(resource_path.path(file_path))
             self.sfx_sounds[sfx_name] = sfx_sound
         except Exception as e:
             print(f"Failed to load SFX '{sfx_name}': {e}")

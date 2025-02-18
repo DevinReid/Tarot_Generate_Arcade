@@ -1,4 +1,5 @@
 import arcade
+import resource_path
 
 class Button():
     def __init__(
@@ -13,8 +14,8 @@ class Button():
             width=350,
             height=200,
         ):
-        button_texture = arcade.load_texture("assets/original/Purple Button Big.png")
-        button_pressed_texture = arcade.load_texture("assets/original/Purple Button Pressed Big.png")
+        button_texture = arcade.load_texture(resource_path.path("assets/original/Purple Button Big.png"))
+        button_pressed_texture = arcade.load_texture(resource_path.path("assets/original/Purple Button Pressed Big.png"))
 
         applied_text = button_pressed_texture if game.hovered_button == name else button_texture
         
