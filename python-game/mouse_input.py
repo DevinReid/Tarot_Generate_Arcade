@@ -30,6 +30,8 @@ def handle_mouse_press(game, x, y, _button, _modifiers, game_state):
             mouse_press_intro(game,x,y,game_state)
         elif game.stage == game_state.SPREAD:
             mouse_press_spread(game,x,y,game_state)
+        elif game.stage == game_state.LOADING:
+            mouse_motion_connection_popup(game,x,y, game_state)
         elif game.stage == game_state.READING_INTRO:
             mouse_press_reading_intro(game,x,y,game_state)
         elif game.stage in {
@@ -66,8 +68,12 @@ def mouse_press_outside(game, x, y, game_state):
     if game.has_tokens:
         if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and \
                 game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
-            game.sound_manager.play_sfx("door")
-            game.stage = game_state.INTRO
+            if game.connection_popup_open:
+                game.sound_manager.play_sfx("button")
+                game.check_token_usage()
+            else:
+                game.sound_manager.play_sfx("door")
+                game.stage = game_state.INTRO
 
 def mouse_press_intro(game, x, y, _game_state):
             button_positions = [
@@ -86,7 +92,18 @@ def mouse_press_intro(game, x, y, _game_state):
                     game.sound_manager.play_sfx("button")
                     game.set_intention(CATEGORIES[i])  # Set intention based on button index
                     return
-                
+
+def mouse_press_connection_popup(game,x,y,game_state):
+    if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and \
+        game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
+                    game.sound_manager.play_sfx("button")
+                    game.start_loading()
+            
+    
+    elif (game.x_right_button + 200) - (game.button_clickbox_width // 2)  <= x <= game.x_right_button + 200 + (game.button_clickbox_width //2) and \
+        game.y_bottom_button-95 <= y <= game.y_bottom_button - 75 + (game.button_clickbox_height):
+                    game.sound_manager.play_sfx("button")
+                    game.close()             
 
 def mouse_press_spread(game, x, y, _game_state):
             if game.reveal_active:
@@ -275,6 +292,9 @@ def handle_mouse_motion(game, x, y, _dx, _dy, game_state):
                 mouse_motion_intro(game,x,y, game_state)
             if game.stage == game_state.SPREAD:
                 mouse_motion_spread(game,x,y, game_state)
+            if game.stage == game_state.LOADING:
+                 if game.connection_popup_open:
+                      mouse_motion_connection_popup(game, x,y, game_state)
             if game.stage == game_state.READING_INTRO:
                 mouse_motion_reading_intro(game,x,y, game_state)
             if game.stage in {
@@ -296,7 +316,10 @@ def handle_mouse_motion(game, x, y, _dx, _dy, game_state):
 def mouse_motion_outside(game,x,y,game_state):
     if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and \
         game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
-            game.hovered_button = "step_inside"
+            if game.connection_popup_open:
+                game.hovered_button = "retry"
+            else:
+                game.hovered_button = "step_inside"
     
     elif (game.x_right_button + 200) - (game.button_clickbox_width // 2)  <= x <= game.x_right_button + 200 + (game.button_clickbox_width //2) and \
         game.y_bottom_button-95 <= y <= game.y_bottom_button - 75 + (game.button_clickbox_height):
@@ -360,6 +383,15 @@ def mouse_motion_spread(game,x,y,game_state):
             game.hovered_card = card
             break
 
+def mouse_motion_connection_popup(game,x,y,game_state):
+    if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and \
+        game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
+                game.hovered_button = "retry"
+            
+    
+    elif (game.x_right_button + 200) - (game.button_clickbox_width // 2)  <= x <= game.x_right_button + 200 + (game.button_clickbox_width //2) and \
+        game.y_bottom_button-95 <= y <= game.y_bottom_button - 75 + (game.button_clickbox_height):
+            game.hovered_button = "exit_game"
 
 def mouse_motion_reading_intro(game,x,y,game_state):
     if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and \

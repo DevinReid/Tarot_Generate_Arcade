@@ -45,6 +45,7 @@ def handle_animation(game, delta_time, game_state):
 
             ## ---- Handles Progress Bar ---- ##
         if game.stage == game_state.LOADING:
+            
             game.frame_timer += delta_time
 
             if game.frame_timer >game.frame_rate *4:
@@ -59,4 +60,5 @@ def handle_animation(game, delta_time, game_state):
                 game.loading_progress += delta_time / 2  
                 if game.loading_progress >= 1.0:
                     game.loading_progress = 1.0
-                    game.stage = game_state.READING_INTRO
+                    if not game.connection_popup_open:
+                        game.stage = game_state.READING_INTRO
