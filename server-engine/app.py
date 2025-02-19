@@ -235,3 +235,8 @@ def token_status():
 def hello_world():
     print(request.remote_addr)
     return "<p>Hello, World!</p>"
+
+@app.route("/health", methods=["GET"])
+def health():
+    return "OK", 200
+
