@@ -2,6 +2,7 @@ import arcade
 import arcade.color
 from button import Button
 import text_utility as TEXT
+import resource_path
 
 DEFAULT_FONT_SIZE = 16
 SCREEN_WIDTH = 1280
@@ -19,8 +20,8 @@ INTRO_TEXT = (
 CATEGORIES = ["Love Life", "Professional Development", "Family and Friends", "Health", "Personal Growth", "Gain Clarity"]
 
 def draw_title_stage(game):
-    dev_title = arcade.load_texture("assets/original/KandD1.png")
-    game_title = arcade.load_texture("assets/original/TitleScreen1.png")
+    dev_title = arcade.load_texture(resource_path.path("assets/original/newtitle.png"))
+    game_title = arcade.load_texture(resource_path.path("assets/original/TitleScreen1.png"))
     
 
     fade_duration = 1.5
@@ -65,9 +66,9 @@ def draw_title_stage(game):
 def draw_outside_stage(game):
 
     def draw_oustside_open(game):
-        game.outside_frame_center = arcade.load_texture(r"assets/original/AnimationFrames2.1/NolaHouse2.1.1.png")
-        game.outside_frame_left = arcade.load_texture(r"assets/original/AnimationFrames2.1/NolaHouse2.1.3.png")
-        game.outside_frame_right = arcade.load_texture(r"assets/original/AnimationFrames2.1/NolaHouse2.1.2.png")
+        game.outside_frame_center = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/NolaHouse2.1.1.png"))
+        game.outside_frame_left = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/NolaHouse2.1.3.png"))
+        game.outside_frame_right = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/NolaHouse2.1.2.png"))
 
 
         current_state = game.states[game.state_index]
@@ -101,7 +102,18 @@ def draw_outside_stage(game):
             text_y_start=45,
         )
 
-   
+        
+        Button(
+                game=game,
+                name='credits',
+                copy="Credits",
+                x_center=game.x_right_button+200,
+                y_center= 125,
+                width=350 //2,
+                height=200 // 2,
+                text_x_start=game.x_right_button + 75,
+                text_y_start=115,
+            )
 
         Button(
             game=game,
@@ -114,10 +126,10 @@ def draw_outside_stage(game):
         )
 
     def draw_outside_closed(game):
-        game.outside_frame_center = arcade.load_texture(r"assets/original/AnimationFrames2.1/house_closed_center.png")
-        game.outside_frame_left = arcade.load_texture(r"assets/original/AnimationFrames2.1/house_closed_left.png")
-        game.outside_frame_right = arcade.load_texture(r"assets/original/AnimationFrames2.1/house_closed_right.png")
-        menu_background = arcade.load_texture(r"assets/original/OptionMenuBackground.png")
+        game.outside_frame_center = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/house_closed_center.png"))
+        game.outside_frame_left = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/house_closed_left.png"))
+        game.outside_frame_right = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/house_closed_right.png"))
+        menu_background = arcade.load_texture(resource_path.path(r"assets/original/OptionMenuBackground.png"))
 
         current_state = game.states[game.state_index]
         if current_state == "LEFT":
@@ -217,7 +229,6 @@ def draw_intro_stage(game):
                 text_x_start=x-125,
                 text_y_start=y,
             )
-
 def draw_spread_stage(game):
         """ Render the card spread stage with the backs of the cards. """
         if game.reveal_active and game.current_revealed_card:
@@ -332,8 +343,8 @@ def draw_loading_stage(game):
     frame_height = 68
 
 
-    progress_bar_sprites = arcade.load_spritesheet(
-            "assets/original/pBarBackgroundSpriteSheet.png",  # Path to the sprite sheet
+    progress_bar_sprites = arcade.load_spritesheet(resource_path.path(
+            "assets/original/pBarBackgroundSpriteSheet.png"),  # Path to the sprite sheet
             sprite_width=frame_width,  # Width of each frame
             sprite_height=frame_height,  # Height of each frame
             columns=4,  # Number of columns in the sprite sheet
@@ -343,10 +354,10 @@ def draw_loading_stage(game):
     frame_index = int(game.frame_timer // game.frame_rate) % 4 
 
     # Load textures
-    background_texture = arcade.load_texture("assets/original/pBarBackground.png")
-    stretch_texture = arcade.load_texture("assets/original/pBarStretch.png")
-    front_texture = arcade.load_texture("assets/original/pBarFront.png")
-    end_texture = arcade.load_texture("assets/original/pBarEnd.png")
+    background_texture = arcade.load_texture(resource_path.path("assets/original/pBarBackground.png"))
+    stretch_texture = arcade.load_texture(resource_path.path("assets/original/pBarStretch.png"))
+    front_texture = arcade.load_texture(resource_path.path("assets/original/pBarFront.png"))
+    end_texture = arcade.load_texture(resource_path.path("assets/original/pBarEnd.png"))
 
     arcade.draw_texture_rectangle(
         bar_x + total_bar_width // 2,  # Centered at the current progress width
@@ -585,7 +596,7 @@ def options_button(game):
         text_x_start=game.x_right_button + 75,
         text_y_start=545,
     )
-    cog=arcade.load_texture(r"assets/original/OptionsCog.png")
+    cog=arcade.load_texture(resource_path.path(r"assets/original/OptionsCog.png"))
     arcade.draw_texture_rectangle(
     center_x= game.x_right_button+250,
     center_y= 903,
@@ -606,11 +617,11 @@ def draw_options_menu(game):
     )
 
     # Load UI textures
-    menu_background = arcade.load_texture(r"assets/original/OptionMenuBackground.png")
-    checkbox_on = arcade.load_texture(r"assets/original/togglecheckboxyes.png")
-    checkbox_off = arcade.load_texture(r"assets/original/togglecheckboxno.png")
-    plus_button = arcade.load_texture(r"assets/original/Plus.png")
-    minus_button = arcade.load_texture(r"assets/original/minus.png")
+    menu_background = arcade.load_texture(resource_path.path(r"assets/original/OptionMenuBackground.png"))
+    checkbox_on = arcade.load_texture(resource_path.path(r"assets/original/togglecheckboxyes.png"))
+    checkbox_off = arcade.load_texture(resource_path.path(r"assets/original/togglecheckboxno.png"))
+    plus_button = arcade.load_texture(resource_path.path(r"assets/original/Plus.png"))
+    minus_button = arcade.load_texture(resource_path.path(r"assets/original/minus.png"))
 
     # Draw menu background
     arcade.draw_texture_rectangle(
@@ -729,3 +740,129 @@ def draw_options_menu(game):
                              SCREEN_HEIGHT // 2 - 140, 
                              font_size=20, align="center")
     
+def draw_credits_screen(game):
+    """Draw the options menu with real UI elements like buttons, checkboxes, and volume controls."""
+
+    # Dark translucent background overlay
+    arcade.draw_lrtb_rectangle_filled(
+        0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 
+        (0, 0, 0, 200)  # Semi-transparent overlay
+    )
+
+    # Load UI textures
+    menu_background = arcade.load_texture(resource_path.path(r"assets/original/OptionMenuBackground.png"))
+    
+    # Draw menu background
+    arcade.draw_texture_rectangle(
+        center_x=SCREEN_WIDTH // 2,
+        center_y=SCREEN_HEIGHT // 2,
+        width=SCREEN_WIDTH - 200,
+        height=SCREEN_HEIGHT - 200,
+        texture=menu_background
+    )
+
+    # Section Titles
+    TEXT.draw_outlined_line("Credits", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 250, font_size=24, align="center")
+
+    ## -------------------- CLOSE MENU BUTTON -------------------- ##
+    Button(
+        game=game,
+        name='close_menu',
+        copy="Close",
+        x_center=game.x_middle_button,
+        y_center=250,
+        width=195,  # Scaled down
+        height=115,  # Scaled down
+        text_x_start=game.x_middle_button-125,
+        text_y_start=245,
+    )
+
+    y_start = SCREEN_HEIGHT - 300  # "Developed By" starts at -300
+
+    # Developers
+    TEXT.draw_outlined_line(
+        "Developed By:",
+        SCREEN_WIDTH // 2,
+        y_start,
+        font_size=20,
+        align="center",
+        color=arcade.color.GOLD
+    )
+
+    TEXT.draw_outlined_line(
+        "Devin Reid (@DevinReid)",
+        SCREEN_WIDTH // 2,
+        y_start - 30,
+        font_size=16,
+        align="center"
+    )
+
+    TEXT.draw_outlined_line(
+        "Kyle McVeigh (@Kyle01)",
+        SCREEN_WIDTH // 2,
+        y_start - 60,
+        font_size=16,
+        align="center"
+    )
+
+    # Art & Assets
+    TEXT.draw_outlined_line(
+        "Art & Assets:",
+        SCREEN_WIDTH // 2,
+        y_start - 110,
+        font_size=20,
+        align="center",
+        color=arcade.color.GOLD
+    )
+
+    TEXT.draw_outlined_line(
+        "Base Card Art by chee-seekins (itch.io/tarot)",
+        SCREEN_WIDTH // 2,
+        y_start - 140,
+        font_size=16,
+        align="center"
+    )
+
+    TEXT.draw_outlined_line(
+        "Original Pixel Art by Devin Reid (Aseprite)",
+        SCREEN_WIDTH // 2,
+        y_start - 170,
+        font_size=16,
+        align="center"
+    )
+
+    # Audio
+    TEXT.draw_outlined_line(
+        "Audio Credits:",
+        SCREEN_WIDTH // 2,
+        y_start - 220,
+        font_size=20,
+        align="center",
+        color=arcade.color.GOLD
+    )
+
+    TEXT.draw_outlined_line(
+        "Sound FX: jarzarr, jdshertbert, Mixkit",
+        SCREEN_WIDTH // 2,
+        y_start - 250,
+        font_size=16,
+        align="center"
+    )
+
+    TEXT.draw_outlined_line(
+        "Music: alkarab (itch.io)",
+        SCREEN_WIDTH // 2,
+        y_start - 280,
+        font_size=16,
+        align="center"
+    )
+
+    # "Written in Python"
+    TEXT.draw_outlined_line(
+        "Written in Python with Python Arcade",
+        SCREEN_WIDTH // 2,
+        y_start - 330,
+        font_size=16,
+        align="center",
+        color=arcade.color.GOLD
+    )

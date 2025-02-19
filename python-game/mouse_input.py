@@ -1,9 +1,12 @@
 from enum import Enum
-from game import CATEGORIES
+
 import text_utility as TEXT
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 960
+
+CATEGORIES = ["Love Life", "Professional Development", "Family and Friends", "Health", "Personal Growth", "Gain Clarity"]
+
 
 """"""
 
@@ -19,7 +22,10 @@ def handle_mouse_press(game, x, y, _button, _modifiers, game_state):
          mouse_press_options_menu(game, x,y)
     else:
         if game.stage == game_state.OUTSIDE:
-            mouse_press_outside(game, x,y, game_state)
+            if game.credits_open:
+                mouse_press_options_menu(game,x,y)
+            else:    
+                mouse_press_outside(game, x,y, game_state)
         elif game.stage == game_state.INTRO:
             mouse_press_intro(game,x,y,game_state)
         elif game.stage == game_state.SPREAD:
@@ -43,13 +49,19 @@ def handle_mouse_press(game, x, y, _button, _modifiers, game_state):
 def mouse_press_outside(game, x, y, game_state):
     # print(f"Mouse clicked at ({x}, {y})")
     # print(f"game_state is {game.stage}")
+         
 
-
-    if game.x_right_button + 200 - game.button_clickbox_width // 2 <= x <= game.x_right_button + 200 + game.button_clickbox_width // 2 and \
-            game.y_bottom_button <= y <= game.y_bottom_button - 50 + game.button_clickbox_height:
-        
+    if (game.x_right_button + 200) - (game.button_clickbox_width // 2)  <= x <= game.x_right_button + 200 + (game.button_clickbox_width //2) and \
+        game.y_bottom_button-95 <= y <= game.y_bottom_button - 75 + (game.button_clickbox_height):
         game.sound_manager.play_sfx("button")
         game.close()
+        return
+    ##Credits button
+    if game.x_right_button + 200 - game.button_clickbox_width // 2 <= x <= game.x_right_button + 200 + game.button_clickbox_width // 2 and \
+            game.y_bottom_button+75 <= y <= game.y_bottom_button +25 + game.button_clickbox_height:
+        game.credits_open = True
+        game.sound_manager.play_sfx("button")
+        
         return
     if game.has_tokens:
         if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and \
@@ -229,6 +241,12 @@ def mouse_press_options_menu(game, x, y):
               SCREEN_HEIGHT // 2 - 130 - 20 <= y <= SCREEN_HEIGHT // 2 - 130 + 20):  # Increase (+)
             game.sound_manager.change_sfx_volume(0.1)
             game.sound_manager.play_sfx("button")
+    if game.credits_open:
+          if (game.x_middle_button - 97 <= x <= game.x_middle_button + 97 and
+            250 - 57 <= y <= 250 + 57):
+            game.credits_open = False
+            game.sound_manager.play_sfx("button")
+         
 
 
 
@@ -249,7 +267,10 @@ def handle_mouse_motion(game, x, y, _dx, _dy, game_state):
             mouse_motion_options_menu(game, x,y, game_state)
         else:    
             if game.stage == game_state.OUTSIDE:
-                mouse_motion_outside(game,x,y, game_state)
+                if game.credits_open:
+                    mouse_motion_options_menu(game, x,y, game_state)
+                else:
+                    mouse_motion_outside(game,x,y, game_state)
             if game.stage == game_state.INTRO:
                 mouse_motion_intro(game,x,y, game_state)
             if game.stage == game_state.SPREAD:
@@ -278,10 +299,19 @@ def mouse_motion_outside(game,x,y,game_state):
             game.hovered_button = "step_inside"
     
     elif (game.x_right_button + 200) - (game.button_clickbox_width // 2)  <= x <= game.x_right_button + 200 + (game.button_clickbox_width //2) and \
-        game.y_bottom_button <= y <= game.y_bottom_button - 50 + (game.button_clickbox_height):
+        game.y_bottom_button-95 <= y <= game.y_bottom_button - 75 + (game.button_clickbox_height):
             game.hovered_button = "exit_game"
+
+    elif game.x_right_button + 200 - game.button_clickbox_width // 2 <= x <= game.x_right_button + 200 + game.button_clickbox_width // 2 and \
+            game.y_bottom_button+75 <= y <= game.y_bottom_button + game.button_clickbox_height:
+            game.hovered_button = "credits"
+        
     else:
+            
             game.hovered_button = None
+
+
+
 
 def mouse_motion_intro(game,x,y,game_state):
     # Loop through button positions and detect hover

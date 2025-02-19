@@ -1,13 +1,14 @@
 import random
 import arcade
 import os
+import resource_path
 
 positions = ['Upright', 'Reversed']
 
 """ Variables for Copyright / Open Source Asset Switcher """
 
-copyright_asset_path = "assets/copyright"
-backup_assets_path = "assets/riderWeightPublicDomain/convertedx2"
+copyright_asset_path = resource_path.path("assets/copyright")
+backup_assets_path = resource_path.path("assets/riderWeightPublicDomain/convertedx2")
 current_asset_path = None
 current_card_back_path = None
 copyright_card_back_path = "backing_diamond_4x.png"
@@ -29,7 +30,7 @@ class Card:
         self.dir_path = current_asset_path
         self.card_back_file_name = current_card_back_path
         self.position = positions[0]
-        texture = arcade.load_texture(f"./{self.dir_path}/{self.file_name}")
+        texture = arcade.load_texture(os.path.join(f"./{self.dir_path}/{self.file_name}"))
         self.width = texture.width
         self.height = texture.height
         self.x = 0
@@ -67,8 +68,13 @@ class Card:
                 tilt_angle=angle,  # Rotate the outline to match the card
             )
 
-        texture_file = f"./{self.dir_path}/{self.file_name}" if show_front else f"./{self.dir_path}/{self.card_back_file_name}"
-        texture = arcade.load_texture(texture_file)
+        if show_front:
+                texture_path = os.path.join(self.dir_path, self.file_name)
+        else:
+                texture_path = os.path.join(self.dir_path, self.card_back_file_name)
+
+        texture = arcade.load_texture(texture_path)
+
         if self.position == positions[0]:
             arcade.draw_scaled_texture_rectangle(x, y, texture, scale, 0+angle,)
         else:
