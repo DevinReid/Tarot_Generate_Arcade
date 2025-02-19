@@ -169,8 +169,24 @@ def draw_outside_stage(game):
         height=SCREEN_HEIGHT - 700,
         texture=menu_background
     )
-        closed_text = "Sorry Cher, we are closed for now,\n\n check back on the 1st of the month"
+        if not game.internet_connected:
+            closed_text = "Sorry Cher, looks like your havin'\n\n trouble connecting to the internet"
+        elif not game.server_connected:
+            closed_text = "Sorry Cher, looks like I'm havin'\n\n trouble connecting to our server"
+        elif not game.has_tokens:
+            closed_text = "Sorry Cher, we are closed for now,\n\n check back on the 1st of the month"
         
+        if game.connection_popup_open:
+             Button(
+            game=game,
+            name='retry',
+            copy="Retry Connection",
+            x_center=SCREEN_WIDTH // 2,
+            y_center=100,
+            text_x_start=SCREEN_WIDTH // 2 - 125,
+            text_y_start=95,
+        )
+            
         
     #set_paragraph_typing is needed to set up what goes into typewriter_lines
         if not game.lines_to_type: ## This guards against looping, could also place the line below when scene is changed
@@ -187,7 +203,7 @@ def draw_outside_stage(game):
             line_height=DEFAULT_LINE_HEIGHT * 1.5,
         )
 
-    if game.has_tokens == True:
+    if game.has_tokens == True and game.internet_connected == True and game.server_connected == True:
          draw_oustside_open(game)
         #  game.has_tokens = False ##debug add this to test closed screen
     else:
@@ -320,6 +336,8 @@ def draw_spread_stage(game):
 
 def draw_loading_stage(game):
     """ Render the loading screen. """
+    if game.connection_popup_open:
+            draw_connection_popup(game)
 
     TEXT.draw_outlined_line(
                 "The spirits are stirring...",
@@ -866,3 +884,59 @@ def draw_credits_screen(game):
         align="center",
         color=arcade.color.GOLD
     )
+def draw_connection_popup(game):
+        menu_background = arcade.load_texture(resource_path.path(r"assets/original/OptionMenuBackground.png"))
+
+        arcade.draw_lrtb_rectangle_filled(
+        0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 
+        (0, 0, 0, 200)  # Semi-transparent overlay
+    )
+             
+        arcade.draw_texture_rectangle(
+        center_x=SCREEN_WIDTH // 2,
+        center_y=SCREEN_HEIGHT // 2-25,
+        width=SCREEN_WIDTH - 350,
+        height=SCREEN_HEIGHT - 700,
+        texture=menu_background
+    )
+        if not game.internet_connected:
+            closed_text = "Sorry Cher, looks like your havin'\n\n trouble connecting to the internet"
+        elif not game.server_connected:
+            closed_text = "Sorry Cher, looks like I'm havin'\n\n trouble connecting to our server"
+       
+        
+        Button(
+            game=game,
+            name='retry',
+            copy="Retry Connection",
+            x_center=SCREEN_WIDTH // 2,
+            y_center=100,
+            text_x_start=SCREEN_WIDTH // 2 - 125,
+            text_y_start=95,
+        )
+            
+        Button(
+            game=game,
+            name='exit_game',
+            copy="Exit",
+            x_center=game.x_right_button+200,
+            y_center=50,
+            width=350 //2,
+            height=200 // 2,
+            text_x_start=game.x_right_button + 75,
+            text_y_start=45,
+        )
+    #set_paragraph_typing is needed to set up what goes into typewriter_lines
+        if not game.lines_to_type: ## This guards against looping, could also place the line below when scene is changed
+            TEXT.set_paragraph_typing(game, closed_text)  ## We did this because this is in the game's on_draw function, which calls this function every frame
+
+
+        TEXT.typewriter_lines(game,
+           
+            center_x = (SCREEN_WIDTH // 2),  ## To achieve desired effect, we will start by starting x at the center,
+                                             ## then subtracting backwards half of each lines lenght to look dynamically centered.
+                                             ## Check the formula within TEXT.Typewriter_lines in text_utility.py
+            start_y=SCREEN_HEIGHT //2 ,
+            font_size=DEFAULT_FONT_SIZE,
+            line_height=DEFAULT_LINE_HEIGHT * 1.5,
+        )

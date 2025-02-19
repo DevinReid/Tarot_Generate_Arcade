@@ -3,6 +3,7 @@ import threading
 import pyglet
 import draw_utility
 import text_utility as TEXT
+import fetch_utility
 import mouse_input
 import random
 import os
@@ -50,6 +51,9 @@ class TarotGame(arcade.Window):
         """ Variables for reading generation"""
         self.request_url = "http://127.0.0.1:5000/" if os.environ.get("DEPLOY_MODE") == "dev" else "https://tarot-generate-arcade.onrender.com/"
         self.has_tokens = True
+        self.internet_connected = True
+        self.server_connected = True
+        self.connection_popup_open = False
         self.intention = None
         self.drawn_cards = None
         self.fortune = None
@@ -246,33 +250,47 @@ class TarotGame(arcade.Window):
 
 
 
+    def check_connectivity(self):
+        """
+        Update booleans for both internet and server connectivity.
+        """
+        self.internet_connected = fetch_utility.has_internet_connection()
+        if self.internet_connected:
+            self.server_connected = fetch_utility.has_server_connection()
+        else:
+            self.server_connected = False
+
     def check_token_usage(self):
         """
         Fetches the total_cost from Flask API endpoint `/token_status`.
         """
-
+        self.check_connectivity()
         headers = generate_auth_headers()
-        try:
-            response = requests.get(f"{self.request_url}token_status", headers=headers)
-            data = response.json()
+        if self.internet_connected and self.server_connected:
+            self.connection_popup_open = False
+            try:
+                response = requests.get(f"{self.request_url}token_status", headers=headers)
+                data = response.json()
 
-            if 'total_cost' in data:
-                total_cost = data['total_cost']
+                if 'total_cost' in data:
+                    total_cost = data['total_cost']
 
-                if total_cost >= 4.90:
-                    print(f"🚨 WARNING: Token usage is at ${total_cost:.2f}. Approaching limit!")
-                    self.has_tokens = False
+                    if total_cost >= 4.90:
+                        print(f"🚨 WARNING: Token usage is at ${total_cost:.2f}. Approaching limit!")
+                        self.has_tokens = False
+                    else:
+                        print(f"Token usage is at ${total_cost}")
+                    return total_cost
                 else:
-                    print(f"Token usage is at ${total_cost}")
-                return total_cost
-            else:
-                print("❌ Unexpected response structure:", data)
+                    print("❌ Unexpected response structure:", data)
+                    return None
+
+            except Exception as e:
+                print(f"❌ Failed to fetch token cost from server: {e}")
                 return None
-
-        except Exception as e:
-            print(f"❌ Failed to fetch token cost from server: {e}")
-            return None
-
+        else:
+            self.connection_popup_open = True
+        
 
 
 
