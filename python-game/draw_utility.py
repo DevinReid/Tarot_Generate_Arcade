@@ -64,7 +64,6 @@ def draw_title_stage(game):
     arcade.draw_lrwh_rectangle_textured(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, game_title, alpha=alpha_2)
     arcade.draw_lrwh_rectangle_textured(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, game.outside_frame_center, alpha=alpha_3)
 def draw_outside_stage(game):
-
     def draw_oustside_open(game):
         game.outside_frame_center = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/NolaHouse2.1.1.png"))
         game.outside_frame_left = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/NolaHouse2.1.3.png"))
@@ -125,6 +124,8 @@ def draw_outside_stage(game):
             text_y_start=95,
         )
 
+
+
     def draw_outside_closed(game):
         game.outside_frame_center = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/house_closed_center.png"))
         game.outside_frame_left = arcade.load_texture(resource_path.path(r"assets/original/AnimationFrames2.1/house_closed_left.png"))
@@ -184,7 +185,7 @@ def draw_outside_stage(game):
             x_center=SCREEN_WIDTH // 2,
             y_center=100,
             text_x_start=SCREEN_WIDTH // 2 - 125,
-            text_y_start=95,
+            text_y_start=115,
         )
             
         
@@ -208,6 +209,13 @@ def draw_outside_stage(game):
         #  game.has_tokens = False ##debug add this to test closed screen
     else:
          draw_outside_closed(game)
+    TEXT.draw_outlined_line(
+                game.version,
+                x=SCREEN_WIDTH // 12, 
+                y=40,  
+                font_size=DEFAULT_FONT_SIZE ,
+                align="center"  
+    )
 def draw_intro_stage(game):
        
         if not game.lines_to_type: ## This guards against looping, could also place the line below when scene is changed
@@ -336,8 +344,6 @@ def draw_spread_stage(game):
 
 def draw_loading_stage(game):
     """ Render the loading screen. """
-    if game.connection_popup_open:
-            draw_connection_popup(game)
 
     TEXT.draw_outlined_line(
                 "The spirits are stirring...",
@@ -437,6 +443,8 @@ def draw_loading_stage(game):
         y = 575  
         card.paint(x, y, show_front=True,scale=1.4, is_small=True)
 
+    if game.connection_popup_open:
+            draw_connection_popup(game)
 def draw_reading_intro(game, card_index):
 
     """ Render the intro stage with all cards shown. """
@@ -912,7 +920,7 @@ def draw_connection_popup(game):
             x_center=SCREEN_WIDTH // 2,
             y_center=100,
             text_x_start=SCREEN_WIDTH // 2 - 125,
-            text_y_start=95,
+            text_y_start=115,
         )
             
         Button(

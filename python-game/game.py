@@ -13,8 +13,9 @@ import requests
 from dotenv import load_dotenv
 from sound_manager import SoundManager
 from deck import TarotDeck
-from fetch_utility import get_fortune, generate_auth_headers
+from fetch_utility import get_fortune, generate_auth_headers, debug_mode
 from enum import Enum
+
 
 load_dotenv()
 
@@ -47,6 +48,7 @@ class TarotGame(arcade.Window):
     def __init__(self):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "Voodoo Tarot GPT")
         self.stage = GameState.TITLE
+        self.version = "v1.0.0"
 
         """ Variables for reading generation"""
         self.request_url = "http://127.0.0.1:5000/" if os.environ.get("DEPLOY_MODE") == "dev" else "https://tarot-generate-arcade.onrender.com/"
@@ -135,7 +137,8 @@ class TarotGame(arcade.Window):
         
         self.sound_manager.play_music(volume = 0.6, loop=True)
         self.check_token_usage()
-        print(f"DEPLOY_MODE is: {mode}")
+        if debug_mode:
+            print(f"DEPLOY_MODE is: {mode}")
        
         pass
 
@@ -276,17 +279,21 @@ class TarotGame(arcade.Window):
                     total_cost = data['total_cost']
 
                     if total_cost >= 4.90:
-                        print(f"🚨 WARNING: Token usage is at ${total_cost:.2f}. Approaching limit!")
+                        if debug_mode:
+                            print(f"🚨 WARNING: Token usage is at ${total_cost:.2f}. Approaching limit!")
                         self.has_tokens = False
                     else:
-                        print(f"Token usage is at ${total_cost}")
+                        if debug_mode:
+                            print(f"Token usage is at ${total_cost}")
                     return total_cost
                 else:
-                    print("❌ Unexpected response structure:", data)
+                    if debug_mode:
+                        print("❌ Unexpected response structure:", data)
                     return None
 
             except Exception as e:
-                print(f"❌ Failed to fetch token cost from server: {e}")
+                if debug_mode:
+                    print(f"❌ Failed to fetch token cost from server: {e}")
                 return None
         else:
             self.connection_popup_open = True
