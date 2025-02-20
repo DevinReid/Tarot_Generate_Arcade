@@ -7,15 +7,19 @@ from compiled_details import RELEVANT_HASH
 def has_internet_connection():
     try:
         response = requests.get("https://health.aws.amazon.com/health/status", timeout=3)
+        print("Internet: Connected")
         return response.status_code == 200
     except requests.exceptions.RequestException:
+        print("Internet: Not Connected")
         return False
 
 def has_server_connection():
     try:
         response = requests.get("https://tarot-generate-arcade.onrender.com/health", timeout=3)
+        print("Server: Connected")
         return response.status_code == 200
     except:
+        print("Server: NOT Connected")
         return False
 
 

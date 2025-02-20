@@ -460,7 +460,7 @@ def draw_reading_intro(game, card_index):
     Button(
         game=game,
         name="next_card",
-        copy="Next Card",
+        copy="First Card",
         x_center=game.x_middle_button,
         y_center=100,
         text_x_start=game.x_middle_button - 125,
