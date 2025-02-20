@@ -30,7 +30,7 @@ class Card:
         self.dir_path = current_asset_path
         self.card_back_file_name = current_card_back_path
         self.position = positions[0]
-        texture = arcade.load_texture(os.path.join(f"./{self.dir_path}/{self.file_name}"))
+        texture = arcade.load_texture(os.path.join(f"/{self.dir_path}/{self.file_name}"))
         self.width = texture.width
         self.height = texture.height
         self.x = 0
