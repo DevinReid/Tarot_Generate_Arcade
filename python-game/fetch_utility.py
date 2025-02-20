@@ -1,7 +1,8 @@
 import requests
-import os
+import secrets
 import hashlib
 from text_utility import wrap_text_paragraphs
+from compiled_details import RELEVANT_HASH
 
 def has_internet_connection():
     try:
@@ -23,8 +24,8 @@ def generate_auth_headers():
     """
     Generates Token and Hash headers for secure API request.
     """
-    token = "player_access"  # Could be any static string or randomized per request
-    secret_hash = os.getenv('SECRET_HASH')  # You can store this locally in the game too
+    token = secrets.token_urlsafe(16)
+    secret_hash = RELEVANT_HASH
 
     hasher = hashlib.sha256()
     hasher.update(f"{token}{secret_hash}".encode('utf-8'))
