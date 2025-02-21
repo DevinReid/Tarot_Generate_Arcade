@@ -1,6 +1,6 @@
 import arcade
 import resource_path
-
+from fetch_utility import debug_mode
 
 class SoundManager:
     def __init__(self, music_file_path):
@@ -49,8 +49,8 @@ class SoundManager:
         self.music_volume = max(0.0, min(1.0, self.music_volume + amount))
         if self.music_player:
             self.music_player.volume = self.music_volume
-        
-        print(f"New volume: {self.music_volume}") 
+        if debug_mode:
+            print(f"New volume: {self.music_volume}") 
 
     
     def load_sfx(self, sfx_name, file_path):
@@ -63,7 +63,8 @@ class SoundManager:
             sfx_sound = arcade.load_sound(resource_path.path(file_path))
             self.sfx_sounds[sfx_name] = sfx_sound
         except Exception as e:
-            print(f"Failed to load SFX '{sfx_name}': {e}")
+            if debug_mode:
+                print(f"Failed to load SFX '{sfx_name}': {e}")
 
     def play_sfx(self, sfx_name, volume=None, speed=1.0):
         """Play a loaded SFX by name."""
@@ -71,15 +72,18 @@ class SoundManager:
             volume=self.sfx_volume if volume is None else volume 
             arcade.play_sound(self.sfx_sounds[sfx_name], volume=volume, speed=speed)
         else:
-            print(f"SFX '{sfx_name}' not found. Make sure you've loaded it.")
+            if debug_mode:
+                print(f"SFX '{sfx_name}' not found. Make sure you've loaded it.")
 
     def toggle_sfx(self):
         """Toggle SFX on/off."""
         self.sfx_enabled = not self.sfx_enabled
-        print(f"SFX Enabled: {self.sfx_enabled}")
+        if debug_mode:
+            print(f"SFX Enabled: {self.sfx_enabled}")
 
     def change_sfx_volume(self, amount):
         """Change SFX volume."""
         self.sfx_volume = max(0.0, min(1.0, self.sfx_volume + amount))
-        print(f"New SFX volume: {self.sfx_volume}")
+        if debug_mode:
+            print(f"New SFX volume: {self.sfx_volume}")
     

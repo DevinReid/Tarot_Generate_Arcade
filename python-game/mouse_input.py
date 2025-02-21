@@ -1,5 +1,5 @@
 from enum import Enum
-
+from fetch_utility import debug_mode
 import text_utility as TEXT
 
 SCREEN_WIDTH = 1280
@@ -31,8 +31,10 @@ def handle_mouse_press(game, x, y, _button, _modifiers, game_state):
         elif game.stage == game_state.SPREAD:
             mouse_press_spread(game,x,y,game_state)
         elif game.stage == game_state.LOADING:
-            mouse_motion_connection_popup(game,x,y, game_state)
+            if game.connection_popup_open:
+                mouse_press_connection_popup(game,x,y, game_state)
         elif game.stage == game_state.READING_INTRO:
+
             mouse_press_reading_intro(game,x,y,game_state)
         elif game.stage in {
             game_state.READING_CARD_1,
@@ -115,12 +117,14 @@ def mouse_press_spread(game, x, y, _game_state):
                     game.current_revealed_card = None
                     if len(game.selected_cards) == 2:
                         game.start_reading_button_active = True
-                        print(f"is start reading active: {game.start_reading_button_active}")
+                        if debug_mode:
+                            print(f"is start reading active: {game.start_reading_button_active}")
                     if len(game.selected_cards) == 3:
                         game.drawn_cards = game.selected_cards
                         game.start_loading()
                         game.start_reading_button_active = False
-                        print(f"is start reading active: {game.start_reading_button_active}")
+                        if debug_mode:
+                            print(f"is start reading active: {game.start_reading_button_active}")
                     return
                     
         
@@ -157,7 +161,10 @@ def mouse_press_reading_summary(game,x,y, game_state):
     if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and game.y_bottom_button  <= y <= game.y_bottom_button +game.button_clickbox_height:
         game.reset_data()
         TEXT.reset_typing_state(game) 
+        for key in game.visited_stages:
+            game.visited_stages[key] = False
         game.sound_manager.play_sfx("button")
+        
         game.stage = game_state.INTRO
     if game.x_left_button - 100 - game.button_clickbox_width <= x <= game.x_left_button- 100 + game.button_clickbox_width and \
         game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
@@ -167,6 +174,10 @@ def mouse_press_reading_summary(game,x,y, game_state):
         game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
         game.reset_data()
         TEXT.reset_typing_state(game) 
+       
+        for key in game.visited_stages:
+            game.visited_stages[key] = False
+
         game.sound_manager.play_sfx("door")
         game.stage = game_state.OUTSIDE
 
@@ -174,39 +185,49 @@ def mouse_press_reading_summary(game,x,y, game_state):
 def advance_reading_stage(game, game_state):
         """ Advance to the next reading stage. """
         if game.stage == game_state.READING_INTRO:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_CARD_1
             TEXT.reset_typing_state(game)  
             game.sound_manager.play_sfx("card_move")
         elif game.stage == game_state.READING_CARD_1:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_CARD_2
             TEXT.reset_typing_state(game)
             game.sound_manager.play_sfx("card_move")
         elif game.stage == game_state.READING_CARD_2:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_CARD_3
             game.sound_manager.play_sfx("card_move")
             TEXT.reset_typing_state(game)  
         elif game.stage == game_state.READING_CARD_3:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_SUMMARY
             game.sound_manager.play_sfx("card_spread")
             TEXT.reset_typing_state(game)  
         elif game.stage == game_state.READING_SUMMARY:
-            print("Reading complete.")  # Placeholder for post-reading action
+            game.visited_stages[game.stage] = True
+            if debug_mode:
+                print("Reading complete.")  # Placeholder for post-reading action
 
 def previous_reading_stage(game, game_state):
     """Return to previous reading stage"""
     if game.stage == game_state.READING_CARD_1:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_INTRO
         TEXT.reset_typing_state(game) 
         game.sound_manager.play_sfx("button")
     elif game.stage == game_state.READING_CARD_2:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_CARD_1
         TEXT.reset_typing_state(game) 
         game.sound_manager.play_sfx("card_move")
     elif game.stage == game_state.READING_CARD_3:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_CARD_2
         game.sound_manager.play_sfx("card_move")
         TEXT.reset_typing_state(game) 
     elif game.stage == game_state.READING_SUMMARY:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_CARD_3
         game.sound_manager.play_sfx("card_move")
         TEXT.reset_typing_state(game) 
@@ -392,6 +413,9 @@ def mouse_motion_connection_popup(game,x,y,game_state):
     elif (game.x_right_button + 200) - (game.button_clickbox_width // 2)  <= x <= game.x_right_button + 200 + (game.button_clickbox_width //2) and \
         game.y_bottom_button-95 <= y <= game.y_bottom_button - 75 + (game.button_clickbox_height):
             game.hovered_button = "exit_game"
+
+    else:
+            game.hovered_button = None
 
 def mouse_motion_reading_intro(game,x,y,game_state):
     if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and \

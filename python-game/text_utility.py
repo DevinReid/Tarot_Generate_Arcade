@@ -25,6 +25,20 @@ def typewriter_lines(
     This fixes the start of each line at the left alignment, but moves the x of each line to appear to be center aligned.
     The typewriter script effect only looks correct if its left aligned.
     """
+    # if not game.line_widths:
+    #     # Ensure line_widths exist, otherwise recalculate (Prevents empty list bugs)
+    #     game.line_widths = []
+    #     for line in game.lines_to_type:
+    #         text_image = arcade.create_text_image(
+    #             text=line,
+    #             font_size=font_size,
+    #             font_name=font_name,
+    #             text_color=color,
+    #             align="center"
+    #         )
+    #         line_width = text_image.width * 1.5
+    #         game.line_widths.append(line_width)  # Store width
+
     for i, line in enumerate(game.lines_to_type):
         # Calculate where the line should go vertically
         y = start_y - (i * line_height)
@@ -34,6 +48,8 @@ def typewriter_lines(
         
         # Calculate the left-aligned starting position from the center line
         adjusted_x = center_x - (line_width // 2)
+
+        
 
         ## Determine which line is fully typed vs. the current typing line
         ## This keeps fully typed lines static, while moving to the next one, instead of printing each line over and over again, often times at the same time
@@ -171,6 +187,40 @@ def set_paragraph_typing(game, paragraph, font_size=18, font_name = "Old School 
         set_typing_text(game, game.lines_to_type[0])  
 
 
+def draw_outlined_paragraph(
+    game,
+    center_x,
+    start_y,
+    font_size=16,
+    font_name="Old School Adventures",
+    color=arcade.color.WHITE,
+    outline_color=arcade.color.BLACK,
+    outline_thickness=1.2,
+    line_height=DEFAULT_LINE_HEIGHT * 1.5,
+):
+    """Draws a paragraph using pre-wrapped text from `game.lines_to_type`, preventing double wrapping."""
+    
+    if not game.lines_to_type:
+        return  # Prevent drawing if there's no text
+
+    for i, line in enumerate(game.lines_to_type):  
+        y = start_y - (i * line_height)
+
+        # Ensure width is calculated the same way as in set_paragraph_typing()
+        line_width = game.line_widths[i]  # Use pre-stored widths
+        adjusted_x = center_x - (line_width // 2)
+
+        draw_outlined_line(
+            line=line,
+            x=adjusted_x,
+            y=y,
+            font_size=font_size,
+            font_name=font_name,
+            color=color,
+            outline_color=outline_color,
+            outline_thickness=outline_thickness
+        )
+
 def update_typing_effect(game, delta_time):
     """
     Updates the typing effect, moving to the next line if necessary.
@@ -232,3 +282,4 @@ def wrap_text_paragraphs(text):
     ]
 
     return wrapped_paragraphs
+

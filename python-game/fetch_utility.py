@@ -1,25 +1,32 @@
 import requests
 import secrets
 import hashlib
+
 from text_utility import wrap_text_paragraphs
 from compiled_details import RELEVANT_HASH
+
+debug_mode = False
 
 def has_internet_connection():
     try:
         response = requests.get("https://health.aws.amazon.com/health/status", timeout=3)
-        print("Internet: Connected")
+        if debug_mode:
+            print("Internet: Connected")
         return response.status_code == 200
     except requests.exceptions.RequestException:
-        print("Internet: Not Connected")
+        if debug_mode:
+            print("Internet: Not Connected")
         return False
 
 def has_server_connection():
     try:
-        response = requests.get("https://tarot-generate-arcade.onrender.com/health", timeout=3)
-        print("Server: Connected")
+        response = requests.get("https://tarot-generate-arcade.onrender.com/health", timeout=6)
+        if debug_mode:
+            print("Server: Connected")
         return response.status_code == 200
     except:
-        print("Server: NOT Connected")
+        if debug_mode:
+            print("Server: NOT Connected")
         return False
 
 
@@ -59,8 +66,8 @@ def get_fortune(game, cards, intention):
                 data = response.json()
                 game.fortune = data['fortune']
 
-                # # Optional: If you want to display token usage in the console
-                print(f"Tokens Used: {data['tokens_used']}")
+                if debug_mode:# # Optional: If you want to display token usage in the console
+                    print(f"Tokens Used: {data['tokens_used']}")
 
             else:
                 # Handle the error if the server returns an error response
@@ -69,8 +76,9 @@ def get_fortune(game, cards, intention):
         except Exception as e:
             # Handle network errors or other unexpected exceptions
             game.fortune = f"API Call Failed: {str(e)}"
+            if debug_mode:
 
-            print(game.fortune)
+                print(game.fortune)
     else:
         game.connection_popup_open = True
     # Let the game know the API call is done, even if it failed
