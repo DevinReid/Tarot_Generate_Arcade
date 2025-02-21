@@ -116,6 +116,11 @@ class TarotGame(arcade.Window):
         self.current_line_index = 0
         self.lines_to_type = []
         self.visited_stages = {
+                GameState.TITLE: False,
+                GameState.OUTSIDE: False,
+                GameState.INTRO:False,
+                GameState.SPREAD:False,
+                GameState.LOADING:False,
                 GameState.READING_INTRO: False,
                 GameState.READING_CARD_1: False,
                 GameState.READING_CARD_2: False,

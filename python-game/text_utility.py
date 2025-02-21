@@ -234,8 +234,9 @@ def update_typing_effect(game, delta_time):
           
 
             if hasattr(game, "sound_manager"):
+                        if not game.visited_stages[game.stage]:
                             if game.text_index % 2 == 0:
-                                game.sound_manager.play_sfx("typewriter", volume=.5, speed = speed)
+                                    game.sound_manager.play_sfx("typewriter", volume=.5, speed = speed)
 
 
             game.typing_timer = 0
