@@ -161,7 +161,10 @@ def mouse_press_reading_summary(game,x,y, game_state):
     if game.x_middle_button - game.button_clickbox_width <= x <= game.x_middle_button + game.button_clickbox_width and game.y_bottom_button  <= y <= game.y_bottom_button +game.button_clickbox_height:
         game.reset_data()
         TEXT.reset_typing_state(game) 
+        for key in game.visited_stages:
+            game.visited_stages[key] = False
         game.sound_manager.play_sfx("button")
+        
         game.stage = game_state.INTRO
     if game.x_left_button - 100 - game.button_clickbox_width <= x <= game.x_left_button- 100 + game.button_clickbox_width and \
         game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
@@ -171,6 +174,10 @@ def mouse_press_reading_summary(game,x,y, game_state):
         game.y_bottom_button <= y <= game.y_bottom_button + game.button_clickbox_height:
         game.reset_data()
         TEXT.reset_typing_state(game) 
+       
+        for key in game.visited_stages:
+            game.visited_stages[key] = False
+
         game.sound_manager.play_sfx("door")
         game.stage = game_state.OUTSIDE
 
@@ -178,40 +185,49 @@ def mouse_press_reading_summary(game,x,y, game_state):
 def advance_reading_stage(game, game_state):
         """ Advance to the next reading stage. """
         if game.stage == game_state.READING_INTRO:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_CARD_1
             TEXT.reset_typing_state(game)  
             game.sound_manager.play_sfx("card_move")
         elif game.stage == game_state.READING_CARD_1:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_CARD_2
             TEXT.reset_typing_state(game)
             game.sound_manager.play_sfx("card_move")
         elif game.stage == game_state.READING_CARD_2:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_CARD_3
             game.sound_manager.play_sfx("card_move")
             TEXT.reset_typing_state(game)  
         elif game.stage == game_state.READING_CARD_3:
+            game.visited_stages[game.stage] = True
             game.stage = game_state.READING_SUMMARY
             game.sound_manager.play_sfx("card_spread")
             TEXT.reset_typing_state(game)  
         elif game.stage == game_state.READING_SUMMARY:
+            game.visited_stages[game.stage] = True
             if debug_mode:
                 print("Reading complete.")  # Placeholder for post-reading action
 
 def previous_reading_stage(game, game_state):
     """Return to previous reading stage"""
     if game.stage == game_state.READING_CARD_1:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_INTRO
         TEXT.reset_typing_state(game) 
         game.sound_manager.play_sfx("button")
     elif game.stage == game_state.READING_CARD_2:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_CARD_1
         TEXT.reset_typing_state(game) 
         game.sound_manager.play_sfx("card_move")
     elif game.stage == game_state.READING_CARD_3:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_CARD_2
         game.sound_manager.play_sfx("card_move")
         TEXT.reset_typing_state(game) 
     elif game.stage == game_state.READING_SUMMARY:
+        game.visited_stages[game.stage] = True
         game.stage = game_state.READING_CARD_3
         game.sound_manager.play_sfx("card_move")
         TEXT.reset_typing_state(game) 

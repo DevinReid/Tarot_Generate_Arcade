@@ -3,6 +3,7 @@ import arcade.color
 from button import Button
 import text_utility as TEXT
 import resource_path
+from game import GameState
 
 DEFAULT_FONT_SIZE = 16
 SCREEN_WIDTH = 1280
@@ -456,14 +457,18 @@ def draw_reading_intro(game, card_index):
     if game.active_card_index != card_index:
             TEXT.set_paragraph_typing(game, paragraph)
             game.active_card_index = card_index 
- 
-    TEXT.typewriter_lines(game,
-        
-        center_x = SCREEN_WIDTH // 2, 
-        start_y=SCREEN_HEIGHT //2-50,
-        font_size=DEFAULT_FONT_SIZE,
-        line_height=DEFAULT_LINE_HEIGHT * 1.5,
-)
+    if game.visited_stages[game.stage]:
+         TEXT.draw_outlined_paragraph(game, 
+                                      SCREEN_WIDTH // 2, 
+                                      SCREEN_HEIGHT // 2 - 50)
+    else:
+        TEXT.typewriter_lines(game,
+            
+            center_x = SCREEN_WIDTH // 2, 
+            start_y=SCREEN_HEIGHT //2-50,
+            font_size=DEFAULT_FONT_SIZE,
+            line_height=DEFAULT_LINE_HEIGHT * 1.5,
+    )
 
     Button(
         game=game,
@@ -495,14 +500,17 @@ def draw_reading_card(game, card_index):
                 game.active_card_index = card_index 
 
 
-        
-        TEXT.typewriter_lines(game,
-            
-            center_x = SCREEN_WIDTH * .65,  
-            start_y=SCREEN_HEIGHT *.7,
-            font_size=DEFAULT_FONT_SIZE,
-            line_height=DEFAULT_LINE_HEIGHT * 1.7,          
-    )
+        if game.visited_stages[game.stage]:
+            TEXT.draw_outlined_paragraph(game, 
+                                        SCREEN_WIDTH * 0.65, SCREEN_HEIGHT * 0.7)
+        else:
+            TEXT.typewriter_lines(game,
+                
+                center_x = SCREEN_WIDTH * .65,  
+                start_y=SCREEN_HEIGHT *.7,
+                font_size=DEFAULT_FONT_SIZE,
+                line_height=DEFAULT_LINE_HEIGHT * 1.7,          
+        )
 
         
         if card.position == 'Reversed':
@@ -566,14 +574,18 @@ def draw_reading_summary(game, card_index):
         if game.active_card_index != card_index:
                 TEXT.set_paragraph_typing(game, paragraph)
                 game.active_card_index = card_index 
-
-        TEXT.typewriter_lines(game,
-            
-            center_x = SCREEN_WIDTH // 2, 
-            start_y=SCREEN_HEIGHT //2+50,
-            font_size=DEFAULT_FONT_SIZE,            
-            line_height=DEFAULT_LINE_HEIGHT * 1.5,          
-    )
+        if game.visited_stages[game.stage]:
+            TEXT.draw_outlined_paragraph(game, 
+                                        SCREEN_WIDTH // 2, 
+                                        SCREEN_HEIGHT // 2 + 50)
+        else:
+            TEXT.typewriter_lines(game,
+                
+                center_x = SCREEN_WIDTH // 2, 
+                start_y=SCREEN_HEIGHT //2+50,
+                font_size=DEFAULT_FONT_SIZE,            
+                line_height=DEFAULT_LINE_HEIGHT * 1.5,          
+        )
         
         Button(
             game=game,
