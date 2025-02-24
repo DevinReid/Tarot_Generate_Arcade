@@ -234,6 +234,12 @@ class TarotGame(arcade.Window):
     def on_mouse_motion(self, x, y, dx, dy):
 
         mouse_input.handle_mouse_motion(self, x, y, dx, dy, GameState)
+
+    def on_key_press(self, key, _modifiers):
+        """Window mode Button"""
+        if key == arcade.key.F11:
+            self.set_fullscreen(not self.fullscreen)
+
        
 
     def set_intention(self, intention_text):
