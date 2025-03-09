@@ -47,6 +47,8 @@ class TarotGame(arcade.Window):
     """ Main application class. """
 
     def __init__(self):
+        
+
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "Voodoo Tarot GPT")
 
         init_screen(self, fullscreen=True)
