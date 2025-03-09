@@ -15,6 +15,7 @@ from sound_manager import SoundManager
 from deck import TarotDeck
 from fetch_utility import get_fortune, generate_auth_headers, debug_mode
 from enum import Enum
+from screen_size import init_screen, handle_resize
 
 
 load_dotenv()
@@ -46,7 +47,11 @@ class TarotGame(arcade.Window):
     """ Main application class. """
 
     def __init__(self):
+        
+
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "Voodoo Tarot GPT")
+
+        init_screen(self, fullscreen=True)
         self.stage = GameState.TITLE
         self.version = "v1.0.0"
 
@@ -155,6 +160,10 @@ class TarotGame(arcade.Window):
        
         pass
 
+    def on_resize(self, width, height):
+        super().on_resize(width, height)
+        handle_resize(self, width, height)
+
     def reset_data(self):
         """ Resets the class variables for new readings """
         self.intention = None
@@ -227,6 +236,12 @@ class TarotGame(arcade.Window):
     def on_mouse_motion(self, x, y, dx, dy):
 
         mouse_input.handle_mouse_motion(self, x, y, dx, dy, GameState)
+
+    def on_key_press(self, key, _modifiers):
+        """Window mode Button"""
+        if key == arcade.key.F11:
+            self.set_fullscreen(not self.fullscreen)
+
        
 
     def set_intention(self, intention_text):
