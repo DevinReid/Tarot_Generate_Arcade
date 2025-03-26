@@ -4,3 +4,6 @@ Flask-SQLAlchemy==3.1.1
 psycopg2==2.9.9
 python-dotenv==1.0.1
 openai==1.58.1
+Flask-CORS==4.0.0
+Werkzeug==3.0.1
+gunicorn==21.2.0
