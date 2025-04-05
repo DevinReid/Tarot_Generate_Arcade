@@ -1,5 +1,6 @@
 import os
 from flask import Flask, jsonify, request, json, abort
+from verify_request import verify_input 
 import hashlib
 import psycopg2
 from dotenv import load_dotenv
@@ -53,6 +54,9 @@ def fortune():
 
     if not cards or not intention:
         abort(400, "Missing cards or intention.")
+
+    if not verify_input(cards, intention):
+        abort(422, "Parameters are not valid")
 
     try:
         # === 1. CALL OPENAI API ===
