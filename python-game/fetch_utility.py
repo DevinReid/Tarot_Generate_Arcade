@@ -52,7 +52,7 @@ def get_fortune(game, cards, intention):
     """Send cards and intention to the Flask server to get a fortune"""
     game.check_connectivity()
     headers = generate_auth_headers()
-    card_names = [card.name for card in cards]
+    card_names = [str(card) for card in cards]
     if game.internet_connected and game.server_connected:
         game.connection_popup_open = False
         try:

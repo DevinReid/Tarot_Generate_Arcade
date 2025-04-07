@@ -90,7 +90,8 @@ VALID_INTENTIONS = [
 
 def verify_input(cards, intention):
     for card in cards:
-        if card not in VALID_CARDS:
+        test_card = card.split(' - ')[0]
+        if test_card not in VALID_CARDS:
             return False
     
     if intention not in VALID_INTENTIONS:

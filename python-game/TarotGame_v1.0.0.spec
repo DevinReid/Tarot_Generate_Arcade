@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='TarotGame_v1.0.0',
+    name='TarotGame_v1.0.1',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

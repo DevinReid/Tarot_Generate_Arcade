@@ -53,7 +53,7 @@ class TarotGame(arcade.Window):
 
         init_screen(self, fullscreen=True)
         self.stage = GameState.TITLE
-        self.version = "v1.0.0"
+        self.version = "v1.0.1"
 
         """ Variables for reading generation"""
         self.request_url = "http://127.0.0.1:5000/" if os.environ.get("DEPLOY_MODE") == "dev" else "https://tarot-generate-arcade.onrender.com/"
