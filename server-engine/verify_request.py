@@ -88,9 +88,13 @@ VALID_INTENTIONS = [
     "Gain Clarity"
 ]
 
+upright_cards = [f"{i} - Upright" for i in VALID_CARDS]
+reversed_cards = [f"{i} - Reversed" for i in VALID_CARDS]
+VALID_POSITION_CARDS = VALID_CARDS + upright_cards + reversed_cards
+
 def verify_input(cards, intention):
     for card in cards:
-        if card not in VALID_CARDS:
+        if card not in VALID_POSITION_CARDS:
             return False
     
     if intention not in VALID_INTENTIONS:
