@@ -229,8 +229,7 @@ class TarotGame(arcade.Window):
         #     color=arcade.color.RED,  # Red color for visibility
         #     border_width=2
         # )
-    def on_mouse_press(self, x, y, _button, _modifiers):
-           
+    def on_mouse_release(self, x, y, _button, _modifiers):
         mouse_input.handle_mouse_press(self,x,y, _button, _modifiers, GameState)
         
     def on_mouse_motion(self, x, y, dx, dy):
