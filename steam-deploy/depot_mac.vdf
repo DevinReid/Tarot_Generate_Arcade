@@ -1,0 +1,15 @@
+"DepotBuildConfig"
+{
+    "DepotID" "3582902"  // Replace with your depot ID
+    "ContentRoot" "C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\python-game\dist"
+
+    "FileMapping"
+    {
+        "LocalPath" "*"          // Upload all files...
+        "DepotPath" "."          // ...into the root of the depot
+        "recursive" "1"          // Recursively include subfolders
+    }
+
+
+    "FileExclusion" "*.exe"
+}
