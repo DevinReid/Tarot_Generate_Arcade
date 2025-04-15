@@ -1,0 +1,13 @@
+"AppBuild"
+{
+    "AppID" "3582900" // Your actual app ID
+    "Desc" "Initial game upload"
+    "BuildOutput" "C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\steam-deploy\output"
+    "ContentRoot" "C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\python-game\dist"
+    // "SetLive"  "releaseBranch"
+    "Depots"
+    {
+        "3582901" "depot_windows.vdf"
+        "3582902" "depot_mac.vdf"
+    }
+}

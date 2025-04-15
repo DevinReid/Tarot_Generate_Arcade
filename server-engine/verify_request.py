@@ -1,5 +1,5 @@
 VALID_CARDS = [
-    "The Fool"
+    "The Fool",
     "The Magician",
     "The High Priestess",
     "The Empress",

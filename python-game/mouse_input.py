@@ -414,8 +414,10 @@ def mouse_motion_spread(game,game_x,game_y,game_state):
     game.hovered_button = None
 
     for card in reversed(game.deck.cards):
+        
         if card.is_clicked(game_x,game_y): 
             game.hovered_card = card
+            
             break
 
 def mouse_motion_connection_popup(game,game_x,game_y,game_state):

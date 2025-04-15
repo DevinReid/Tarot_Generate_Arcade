@@ -12,6 +12,7 @@
 /python-game/build 
 /python-game/game.spec
 /python-game/compiled_details.py
+/python-game/dist_archive
 
 python-game/assets/copyright
 
