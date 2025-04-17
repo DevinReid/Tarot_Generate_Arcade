@@ -19,7 +19,7 @@ def verify_authentication():
         return True
     
     try: 
-        print("not in dev mode")
+        print("not in dev mode!")
         secret = os.environ.get('SECRET_HASH')
 
         request_token = request.headers['Token']
