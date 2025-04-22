@@ -6,6 +6,16 @@ import numpy as np
 import tempfile
 import shutil
 import cv2
+import threading
+from text_utility import (
+    draw_outlined_line,
+    set_paragraph_typing,
+    typewriter_lines,
+    update_typing_effect,
+    reset_typing_state
+)
+from reading_generator import ReadingGenerator
+from card_selector import CardSelector
 
 class CardFlipAnimation:
     def __init__(self, assets_dir: str = "assets"):
@@ -17,7 +27,7 @@ class CardFlipAnimation:
         self.background = None
         self.angle = 0
         self.flipping = False
-        self.flip_duration = 1  # seconds
+        self.flip_duration = .75  # seconds
         self.current_time = 0
         self.frames = []
         self.recording = False
@@ -27,7 +37,7 @@ class CardFlipAnimation:
         self.show_text = True  # Show text immediately
         self.text_alpha = 255
         self.text_display_time = 0  # Track how long text has been shown
-        self.initial_delay = 3.0  # 3 second delay before flip starts
+        self.initial_delay = 3  # 3 second delay before flip starts
         self.total_time = 0  # Track total elapsed time
         self.flip_complete_time = 0  # Track time since flip completed
         self.flip_completed = False  # Track if flip has completed
@@ -35,7 +45,7 @@ class CardFlipAnimation:
         self.card_text_alpha = 0  # Alpha for card name text
         self.phase2_started = False  # Track if phase 2 has started
         self.phase2_time = 0  # Track time in phase 2
-        self.phase2_duration = 1.0  # Duration of phase 2 animation
+        self.phase2_duration = .5  # Duration of phase 2 animation
         self.card_scale = 1.0  # Current scale of the card
         self.card_y_offset = 0  # Current y offset of the card
         self.phase3_started = False  # Track if phase 3 has started
@@ -45,6 +55,52 @@ class CardFlipAnimation:
         self.phase4_time = 0  # Track time in phase 4
         self.fade_out_alpha = 255  # Alpha for fade out
         self.cta_alpha = 0  # Alpha for CTA text
+        
+        # Typewriter effect variables
+        self.typing_speed = 0.02  # Time between characters
+        self.typing_timer = 0
+        self.text_index = 0
+        self.current_text = ""
+        self.displayed_text = ""
+        self.lines_to_type = []
+        self.line_widths = []
+        self.current_line_index = 0
+        self.typing_complete = False
+        self.typing_complete_time = 0  # Track time since typing completed
+        
+        # Card selection
+        self.card_selector = CardSelector(assets_dir)
+        self.card_name, self.card_orientation, self.card_image_path = self.card_selector.select_random_card()
+        self.card_rotation = 180 if self.card_orientation == "Reversed" else 0
+        
+        # Reading generator
+        self.reading_generator = ReadingGenerator()
+        self.generated_reading = None
+        self.reading_ready = False
+        self.reading_error = False
+        
+        # Start generating reading in background thread
+        self._start_reading_generation()
+
+    def _start_reading_generation(self):
+        """Start generating the reading in a background thread."""
+        def generate_reading():
+            try:
+                reading, _ = self.reading_generator.generate_daily_reading(
+                    self.card_name,
+                    self.card_orientation
+                )
+                self.generated_reading = reading
+            except Exception as e:
+                print(f"Error generating reading: {e}")
+                self.reading_error = True
+                self.generated_reading = self.reading_generator.generate_placeholder_reading()
+            finally:
+                self.reading_ready = True
+
+        thread = threading.Thread(target=generate_reading)
+        thread.daemon = True
+        thread.start()
 
     def setup(self):
         """Set up the animation window and load resources."""
@@ -60,6 +116,19 @@ class CardFlipAnimation:
         
         # Load textures
         self.load_textures()
+        
+        # Calculate background scale to fill window
+        bg_width, bg_height = self.background.width, self.background.height
+        window_width, window_height = self.window.width, self.window.height
+        
+        # Calculate scale to fill while maintaining aspect ratio
+        scale_x = window_width / bg_width
+        scale_y = window_height / bg_height
+        self.bg_scale = max(scale_x, scale_y)  # Use max instead of min to fill the window
+        
+        # Calculate centered position
+        self.bg_x = window_width // 2
+        self.bg_y = window_height // 2
 
     def load_textures(self, card_image_path: str = None):
         """Load all textures."""
@@ -75,13 +144,8 @@ class CardFlipAnimation:
         back_path = os.path.join(self.assets_dir, "cards", "back.png")
         self.card_back = arcade.load_texture(back_path)
         
-        # Load front texture if provided
-        if card_image_path:
-            self.card_front = arcade.load_texture(card_image_path)
-        else:
-            # Default front texture
-            front_path = os.path.join(self.assets_dir, "cards", "cups7.1.png")
-            self.card_front = arcade.load_texture(front_path)
+        # Load front texture using the selected card
+        self.card_front = arcade.load_texture(self.card_image_path)
 
     def start_flip(self):
         """Start the card flip animation."""
@@ -95,8 +159,8 @@ class CardFlipAnimation:
         
         # Don't start flipping until initial delay is over
         if self.total_time < self.initial_delay:
-            # Start fading text after 2 seconds
-            if self.show_text and self.total_time > 2.0:
+            # Start fading text after 1.5 seconds (adjusted from 2.0)
+            if self.show_text and self.total_time > 1.5:
                 self.text_alpha = max(0, self.text_alpha - (delta_time * 255))  # Fade over 1 second
             return
             
@@ -140,15 +204,26 @@ class CardFlipAnimation:
             if self.phase2_time >= self.phase2_duration:
                 self.phase3_started = True
                 self.phase3_time = 0
+                # Use the pre-generated reading
+                if self.reading_ready:
+                    set_paragraph_typing(self, self.generated_reading, font_size=16)
+                else:
+                    # If reading isn't ready yet, use placeholder
+                    set_paragraph_typing(self, self.reading_generator.generate_placeholder_reading(), font_size=16)
         elif self.phase3_started and not self.phase4_started:
             self.phase3_time += delta_time
             
-            # Fade in description text over 0.5 seconds
-            if self.phase3_time < 0.5:
-                self.description_alpha = min(255, self.description_alpha + (delta_time * 510))
+            # Update typing effect
+            update_typing_effect(self, delta_time)
             
-            # Start phase 4 after 6 seconds of showing description
-            if self.phase3_time >= 6.0:
+            # Track time since typing completed
+            if self.typing_complete:
+                self.typing_complete_time += delta_time
+            
+            # Start phase 4 if either:
+            # 1. Typing has been complete for 2 seconds, or
+            # 2. Minimum time of 18 seconds has passed (increased from 16)
+            if (self.typing_complete and self.typing_complete_time >= 2.0) or self.phase3_time >= 18.0:
                 self.phase4_started = True
                 self.phase4_time = 0
         elif self.phase4_started and not self.animation_complete:
@@ -165,22 +240,34 @@ class CardFlipAnimation:
                 self.cta_alpha = min(255, self.cta_alpha + (delta_time * 510))
             
             # End animation after 3 seconds of showing CTA
-            if self.phase4_time >= 3.5:  # 0.5s fade out + 3s CTA
+            if self.phase4_time >= 4.5:  # 0.5s fade out + 4s CTA (increased from 3.5)
                 self.animation_complete = True
                 if self.recording:
                     self.window.close()
+
+    def _calculate_font_size(self, text: str, max_width: int = 250) -> int:
+        """Calculate appropriate font size based on text length."""
+        # Base font sizes for different text lengths
+        if len(text) <= 10:
+            return 34  # Default size for short names
+        elif len(text) <= 15:
+            return 30  # Slightly smaller for medium names
+        elif len(text) <= 20:
+            return 26  # Even smaller for long names
+        else:
+            return 22  # Smallest for very long names
 
     def draw(self):
         """Draw the current state of the animation."""
         # Clear the screen
         arcade.start_render()
         
-        # Draw background
+        # Draw background maintaining aspect ratio
         arcade.draw_texture_rectangle(
-            self.window.width // 2,
-            self.window.height // 2,
-            self.window.width,
-            self.window.height,
+            self.bg_x,
+            self.bg_y,
+            self.background.width * self.bg_scale,
+            self.background.height * self.bg_scale,
             self.background
         )
         
@@ -199,7 +286,7 @@ class CardFlipAnimation:
                     self.card_size[1] * self.card_scale,
                     self.card_back,
                     angle=0,
-                    alpha=int(self.fade_out_alpha)  # Add alpha to card
+                    alpha=int(self.fade_out_alpha)
                 )
             else:
                 # Draw front side
@@ -209,123 +296,104 @@ class CardFlipAnimation:
                     self.card_size[0] * scale,
                     self.card_size[1] * self.card_scale,
                     self.card_front,
-                    angle=0,
-                    alpha=int(self.fade_out_alpha)  # Add alpha to card
+                    angle=self.card_rotation,  # Apply rotation for reversed cards
+                    alpha=int(self.fade_out_alpha)
                 )
         
-        # Draw text if visible (after the card)
-        if self.show_text and self.text_alpha > 0 and self.fade_out_alpha > 0:
-            # Create semi-transparent background for text
-            arcade.draw_rectangle_filled(
-                self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 50,  # Position above card
-                self.window.width,
-                60,  # Smaller height for smaller text
-                (0, 0, 0, int(self.text_alpha * 0.5))
-            )
-            # Draw text in white with opacity
-            opacity = int(self.text_alpha)
-            arcade.draw_text(
-                "Daily Tarot",
-                self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 50,  # Position above card
-                (255, 255, 255, opacity),  # White with opacity
-                font_size=36,  # Smaller font size
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
-            )
+        # Only draw text in appropriate phases
+        if not self.phase4_started:  # Don't draw any text in phase 4
+            # Draw text if visible (after the card)
+            if self.show_text and not self.phase2_started:  # Only show before phase 2
+                # Draw text with outline
+                draw_outlined_line(
+                    line="Daily Tarot",
+                    x=self.window.width // 2,
+                    y=center_y + self.card_size[1] // 2 + 50,
+                    font_size=38,  # Increased from 36
+                    color=(255, 255, 255, int(self.text_alpha)),
+                    outline_color=(0, 0, 0, int(self.text_alpha)),
+                    align="center"
+                )
 
-        # Draw card name and orientation after flip completes
-        if self.flip_completed and self.card_text_alpha > 0 and self.fade_out_alpha > 0:
-            # Calculate text position that scales with card size
-            text_offset = (self.card_size[1] * self.card_scale) // 2
-            
-            # Draw card name
-            arcade.draw_text(
-                "Seven of Cups",
-                self.window.width // 2,
-                center_y + text_offset + 90,  # Position above card, scaled with card size
-                (255, 255, 255, int(self.card_text_alpha)),  # White with fade in
-                font_size=32,  # Slightly smaller font size
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
-            )
-            # Draw orientation
-            arcade.draw_text(
-                "Upright",
-                self.window.width // 2,
-                center_y + text_offset + 40,  # Position below card name, scaled with card size
-                (255, 255, 255, int(self.card_text_alpha)),  # White with fade in
-                font_size=28,  # Even smaller font size for orientation
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
-            )
+            # Draw card name and orientation after flip completes
+            if self.flip_completed and self.card_text_alpha > 0:
+                # Calculate text position that scales with card size
+                text_offset = (self.card_size[1] * self.card_scale) // 2
+                
+                # Calculate dynamic font size for card name only
+                card_name_size = self._calculate_font_size(self.card_name)
+                
+                # Draw card name with outline
+                draw_outlined_line(
+                    line=self.card_name,  # Use dynamic card name
+                    x=self.window.width // 2,
+                    y=center_y + text_offset + 90,
+                    font_size=card_name_size,
+                    color=(255, 255, 255, int(self.card_text_alpha)),
+                    outline_color=(0, 0, 0, int(self.card_text_alpha)),
+                    align="center"
+                )
+                
+                # Draw orientation with outline (fixed size)
+                draw_outlined_line(
+                    line=self.card_orientation,  # Use dynamic orientation
+                    x=self.window.width // 2,
+                    y=center_y + text_offset + 40,
+                    font_size=30,  # Fixed size for orientation
+                    color=(255, 255, 255, int(self.card_text_alpha)),
+                    outline_color=(0, 0, 0, int(self.card_text_alpha)),
+                    align="center"
+                )
 
-        # Draw description text in phase 3
-        if self.phase3_started and self.description_alpha > 0 and self.fade_out_alpha > 0:
-            # Draw description text
-            description = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."""
-            arcade.draw_text(
-                description,
-                self.window.width // 2,
-                self.window.height // 2 - 180,
-                (255, 255, 255, int(self.description_alpha)),
-                font_size=16,
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures",
-                width=self.window.width - 150,  # Width for text wrapping
-                align="center"  # Center align text
-            )
+            # Draw description text in phase 3
+            if self.phase3_started and self.fade_out_alpha > 0:
+                typewriter_lines(
+                    self,
+                    center_x=self.window.width // 2-30,
+                    start_y=self.window.height // 2,
+                    font_size=16,
+                    color=(255, 255, 255, int(self.fade_out_alpha)),
+                    outline_color=(0, 0, 0, int(self.fade_out_alpha)),
+                    line_height=35  # Set specific line height instead of using multiplier
+                )
 
         # Draw CTA text in phase 4
         if self.phase4_started and self.cta_alpha > 0:
-            # Draw each line of CTA text separately
+            # Draw each line of CTA text separately with outline
             base_y = self.window.height // 2 + 100
             line_height = 60  # Space between lines
             
             # Draw "Visit"
-            arcade.draw_text(
-                "Visit",
-                self.window.width // 2,
-                base_y + line_height+20,
-                (255, 255, 255, int(self.cta_alpha)),
+            draw_outlined_line(
+                line="Visit",
+                x=self.window.width // 2,
+                y=base_y + line_height + 20,
                 font_size=48,
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
+                color=(255, 255, 255, int(self.cta_alpha)),
+                outline_color=(0, 0, 0, int(self.cta_alpha)),
+                align="center"
             )
             
             # Draw "Mama Nyah"
-            arcade.draw_text(
-                "Mama Nyah",
-                self.window.width // 2,
-                base_y,
-                (255, 255, 255, int(self.cta_alpha)),
+            draw_outlined_line(
+                line="Mama Nyah",
+                x=self.window.width // 2,
+                y=base_y,
                 font_size=48,
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
+                color=(255, 255, 255, int(self.cta_alpha)),
+                outline_color=(0, 0, 0, int(self.cta_alpha)),
+                align="center"
             )
             
             # Draw "Today"
-            arcade.draw_text(
-                "Today",
-                self.window.width // 2,
-                base_y - line_height-20,
-                (255, 255, 255, int(self.cta_alpha)),
+            draw_outlined_line(
+                line="Today",
+                x=self.window.width // 2,
+                y=base_y - line_height - 20,
                 font_size=48,
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
+                color=(255, 255, 255, int(self.cta_alpha)),
+                outline_color=(0, 0, 0, int(self.cta_alpha)),
+                align="center"
             )
         
         # If recording, capture the frame
