@@ -41,6 +41,10 @@ class CardFlipAnimation:
         self.phase3_started = False  # Track if phase 3 has started
         self.phase3_time = 0  # Track time in phase 3
         self.description_alpha = 0  # Alpha for description text
+        self.phase4_started = False  # Track if phase 4 has started
+        self.phase4_time = 0  # Track time in phase 4
+        self.fade_out_alpha = 255  # Alpha for fade out
+        self.cta_alpha = 0  # Alpha for CTA text
 
     def setup(self):
         """Set up the animation window and load resources."""
@@ -136,15 +140,32 @@ class CardFlipAnimation:
             if self.phase2_time >= self.phase2_duration:
                 self.phase3_started = True
                 self.phase3_time = 0
-        elif self.phase3_started and not self.animation_complete:
+        elif self.phase3_started and not self.phase4_started:
             self.phase3_time += delta_time
             
             # Fade in description text over 0.5 seconds
             if self.phase3_time < 0.5:
                 self.description_alpha = min(255, self.description_alpha + (delta_time * 510))
             
-            # End animation after 6 seconds of showing description
+            # Start phase 4 after 6 seconds of showing description
             if self.phase3_time >= 6.0:
+                self.phase4_started = True
+                self.phase4_time = 0
+        elif self.phase4_started and not self.animation_complete:
+            self.phase4_time += delta_time
+            
+            # Fade out everything over 0.5 seconds
+            if self.phase4_time < 0.5:
+                self.fade_out_alpha = max(0, self.fade_out_alpha - (delta_time * 510))
+                self.card_text_alpha = self.fade_out_alpha
+                self.description_alpha = self.fade_out_alpha
+            
+            # Fade in CTA text after fade out completes
+            if self.phase4_time >= 0.5:
+                self.cta_alpha = min(255, self.cta_alpha + (delta_time * 510))
+            
+            # End animation after 3 seconds of showing CTA
+            if self.phase4_time >= 3.5:  # 0.5s fade out + 3s CTA
                 self.animation_complete = True
                 if self.recording:
                     self.window.close()
@@ -167,29 +188,33 @@ class CardFlipAnimation:
         center_x = self.window.width // 2
         center_y = self.window.height // 2 + self.card_y_offset  # Apply y offset
         
-        if self.angle < 90:
-            # Draw back side
-            scale = np.cos(np.radians(self.angle)) * self.card_scale
-            arcade.draw_texture_rectangle(
-                center_x, center_y,
-                self.card_size[0] * scale,
-                self.card_size[1] * self.card_scale,
-                self.card_back,
-                angle=0
-            )
-        else:
-            # Draw front side
-            scale = np.cos(np.radians(180 - self.angle)) * self.card_scale
-            arcade.draw_texture_rectangle(
-                center_x, center_y,
-                self.card_size[0] * scale,
-                self.card_size[1] * self.card_scale,
-                self.card_front,
-                angle=0
-            )
+        # Draw card if not faded out
+        if self.fade_out_alpha > 0:
+            if self.angle < 90:
+                # Draw back side
+                scale = np.cos(np.radians(self.angle)) * self.card_scale
+                arcade.draw_texture_rectangle(
+                    center_x, center_y,
+                    self.card_size[0] * scale,
+                    self.card_size[1] * self.card_scale,
+                    self.card_back,
+                    angle=0,
+                    alpha=int(self.fade_out_alpha)  # Add alpha to card
+                )
+            else:
+                # Draw front side
+                scale = np.cos(np.radians(180 - self.angle)) * self.card_scale
+                arcade.draw_texture_rectangle(
+                    center_x, center_y,
+                    self.card_size[0] * scale,
+                    self.card_size[1] * self.card_scale,
+                    self.card_front,
+                    angle=0,
+                    alpha=int(self.fade_out_alpha)  # Add alpha to card
+                )
         
         # Draw text if visible (after the card)
-        if self.show_text and self.text_alpha > 0:
+        if self.show_text and self.text_alpha > 0 and self.fade_out_alpha > 0:
             # Create semi-transparent background for text
             arcade.draw_rectangle_filled(
                 self.window.width // 2,
@@ -212,7 +237,7 @@ class CardFlipAnimation:
             )
 
         # Draw card name and orientation after flip completes
-        if self.flip_completed and self.card_text_alpha > 0:
+        if self.flip_completed and self.card_text_alpha > 0 and self.fade_out_alpha > 0:
             # Calculate text position that scales with card size
             text_offset = (self.card_size[1] * self.card_scale) // 2
             
@@ -240,9 +265,7 @@ class CardFlipAnimation:
             )
 
         # Draw description text in phase 3
-        if self.phase3_started and self.description_alpha > 0:
-            # Create semi-transparent background for description
-           
+        if self.phase3_started and self.description_alpha > 0 and self.fade_out_alpha > 0:
             # Draw description text
             description = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
 Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
@@ -261,6 +284,48 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."""
                 font_name="Old School Adventures",
                 width=self.window.width - 150,  # Width for text wrapping
                 align="center"  # Center align text
+            )
+
+        # Draw CTA text in phase 4
+        if self.phase4_started and self.cta_alpha > 0:
+            # Draw each line of CTA text separately
+            base_y = self.window.height // 2 + 100
+            line_height = 60  # Space between lines
+            
+            # Draw "Visit"
+            arcade.draw_text(
+                "Visit",
+                self.window.width // 2,
+                base_y + line_height+20,
+                (255, 255, 255, int(self.cta_alpha)),
+                font_size=48,
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Old School Adventures"
+            )
+            
+            # Draw "Mama Nyah"
+            arcade.draw_text(
+                "Mama Nyah",
+                self.window.width // 2,
+                base_y,
+                (255, 255, 255, int(self.cta_alpha)),
+                font_size=48,
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Old School Adventures"
+            )
+            
+            # Draw "Today"
+            arcade.draw_text(
+                "Today",
+                self.window.width // 2,
+                base_y - line_height-20,
+                (255, 255, 255, int(self.cta_alpha)),
+                font_size=48,
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Old School Adventures"
             )
         
         # If recording, capture the frame
