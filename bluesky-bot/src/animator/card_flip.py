@@ -33,6 +33,14 @@ class CardFlipAnimation:
         self.flip_completed = False  # Track if flip has completed
         self.animation_complete = False  # Track if entire animation is complete
         self.card_text_alpha = 0  # Alpha for card name text
+        self.phase2_started = False  # Track if phase 2 has started
+        self.phase2_time = 0  # Track time in phase 2
+        self.phase2_duration = 1.0  # Duration of phase 2 animation
+        self.card_scale = 1.0  # Current scale of the card
+        self.card_y_offset = 0  # Current y offset of the card
+        self.phase3_started = False  # Track if phase 3 has started
+        self.phase3_time = 0  # Track time in phase 3
+        self.description_alpha = 0  # Alpha for description text
 
     def setup(self):
         """Set up the animation window and load resources."""
@@ -104,12 +112,39 @@ class CardFlipAnimation:
                 self.flip_completed = True
                 self.flip_complete_time = 0
                 self.angle = 180  # Keep card fully flipped
-        elif self.flip_completed and not self.animation_complete:
+        elif self.flip_completed and not self.phase2_started:
             self.flip_complete_time += delta_time
             # Fade in card name text over 0.5 seconds
             self.card_text_alpha = min(255, self.card_text_alpha + (delta_time * 510))  # 510 = 255/0.5
-            # End animation after 2 seconds of showing completed flip
+            
+            # Start phase 2 after 2 seconds of showing completed flip
             if self.flip_complete_time >= 2.0:
+                self.phase2_started = True
+                self.phase2_time = 0
+        elif self.phase2_started and not self.phase3_started:
+            self.phase2_time += delta_time
+            progress = min(1.0, self.phase2_time / self.phase2_duration)
+            
+            # Animate scale from 1.0 to 0.5
+            self.card_scale = 1.0 - (progress * 0.5)
+            
+            # Animate y offset from 0 to half screen height
+            target_y_offset = self.window.height // 5
+            self.card_y_offset = progress * target_y_offset
+            
+            # Start phase 3 after phase 2 completes
+            if self.phase2_time >= self.phase2_duration:
+                self.phase3_started = True
+                self.phase3_time = 0
+        elif self.phase3_started and not self.animation_complete:
+            self.phase3_time += delta_time
+            
+            # Fade in description text over 0.5 seconds
+            if self.phase3_time < 0.5:
+                self.description_alpha = min(255, self.description_alpha + (delta_time * 510))
+            
+            # End animation after 6 seconds of showing description
+            if self.phase3_time >= 6.0:
                 self.animation_complete = True
                 if self.recording:
                     self.window.close()
@@ -130,25 +165,25 @@ class CardFlipAnimation:
         
         # Calculate center position
         center_x = self.window.width // 2
-        center_y = self.window.height // 2
+        center_y = self.window.height // 2 + self.card_y_offset  # Apply y offset
         
         if self.angle < 90:
             # Draw back side
-            scale = np.cos(np.radians(self.angle))
+            scale = np.cos(np.radians(self.angle)) * self.card_scale
             arcade.draw_texture_rectangle(
                 center_x, center_y,
                 self.card_size[0] * scale,
-                self.card_size[1],
+                self.card_size[1] * self.card_scale,
                 self.card_back,
                 angle=0
             )
         else:
             # Draw front side
-            scale = np.cos(np.radians(180 - self.angle))
+            scale = np.cos(np.radians(180 - self.angle)) * self.card_scale
             arcade.draw_texture_rectangle(
                 center_x, center_y,
                 self.card_size[0] * scale,
-                self.card_size[1],
+                self.card_size[1] * self.card_scale,
                 self.card_front,
                 angle=0
             )
@@ -178,11 +213,14 @@ class CardFlipAnimation:
 
         # Draw card name and orientation after flip completes
         if self.flip_completed and self.card_text_alpha > 0:
+            # Calculate text position that scales with card size
+            text_offset = (self.card_size[1] * self.card_scale) // 2
+            
             # Draw card name
             arcade.draw_text(
                 "Seven of Cups",
                 self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 70,  # Position above card
+                center_y + text_offset + 90,  # Position above card, scaled with card size
                 (255, 255, 255, int(self.card_text_alpha)),  # White with fade in
                 font_size=32,  # Slightly smaller font size
                 anchor_x="center",
@@ -193,12 +231,36 @@ class CardFlipAnimation:
             arcade.draw_text(
                 "Upright",
                 self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 30,  # Position below card name
+                center_y + text_offset + 40,  # Position below card name, scaled with card size
                 (255, 255, 255, int(self.card_text_alpha)),  # White with fade in
                 font_size=28,  # Even smaller font size for orientation
                 anchor_x="center",
                 anchor_y="center",
                 font_name="Old School Adventures"
+            )
+
+        # Draw description text in phase 3
+        if self.phase3_started and self.description_alpha > 0:
+            # Create semi-transparent background for description
+           
+            # Draw description text
+            description = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."""
+            arcade.draw_text(
+                description,
+                self.window.width // 2,
+                self.window.height // 2 - 180,
+                (255, 255, 255, int(self.description_alpha)),
+                font_size=16,
+                anchor_x="center",
+                anchor_y="center",
+                font_name="Old School Adventures",
+                width=self.window.width - 150,  # Width for text wrapping
+                align="center"  # Center align text
             )
         
         # If recording, capture the frame
