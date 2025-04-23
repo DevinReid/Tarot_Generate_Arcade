@@ -7,6 +7,12 @@ import tempfile
 import shutil
 import cv2
 import threading
+import sounddevice as sd
+import wave
+import queue
+import time
+import subprocess
+import textwrap
 from text_utility import (
     draw_outlined_line,
     set_paragraph_typing,
@@ -16,7 +22,6 @@ from text_utility import (
 )
 from reading_generator import ReadingGenerator
 from card_selector import CardSelector
-import time
 
 class CardFlipAnimation(arcade.View):
     def __init__(self, assets_dir: str = "assets"):
@@ -28,7 +33,7 @@ class CardFlipAnimation(arcade.View):
         self.background = None
         self.angle = 0
         self.flipping = False
-        self.flip_duration = 2.0  # Increased from 1.5 seconds
+        self.flip_duration = 4.0  # Increased from 2.0 seconds
         self.current_time = 0
         self.frames = []
         self.recording = False
@@ -38,7 +43,7 @@ class CardFlipAnimation(arcade.View):
         self.show_text = True  # Show text immediately
         self.text_alpha = 255
         self.text_display_time = 0  # Track how long text has been shown
-        self.initial_delay = 6.0  # Increased from 4 seconds
+        self.initial_delay = 8.0  # Increased from 6.0 seconds
         self.total_time = 0  # Track total elapsed time
         self.flip_complete_time = 0  # Track time since flip completed
         self.flip_completed = False  # Track if flip has completed
@@ -46,11 +51,10 @@ class CardFlipAnimation(arcade.View):
         self.card_text_alpha = 0  # Alpha for card name text
         self.phase2_started = False  # Track if phase 2 has started
         self.phase2_time = 0  # Track time in phase 2
-        self.phase2_duration = 2.0  # Increased from 1.0 seconds
+        self.phase2_duration = 4.0  # Increased from 2.0 seconds
         self.card_scale = 1.0  # Current scale of the card
         self.card_y_offset = 0  # Current y offset of the card
         self.phase3_started = False  # Track if phase 3 has started
-    
         self.phase3_time = 0  # Track time in phase 3
         self.description_alpha = 0  # Alpha for description text
         self.phase4_started = False  # Track if phase 4 has started
@@ -58,8 +62,20 @@ class CardFlipAnimation(arcade.View):
         self.fade_out_alpha = 255  # Alpha for fade out
         self.cta_alpha = 0  # Alpha for CTA text
         
+        # Sound effect variables
+        self.clonck_sound = None
+        self.clonck_played = [False, False, False]  # Track if each clonck has been played
+        self.clonck_times = [2.0, 4.0, 6.0]  # Times to play clonck sound (in seconds)
+        
+        # Audio recording variables
+        self.audio_queue = queue.Queue()
+        self.audio_data = []
+        self.audio_start_time = None
+        self.sample_rate = 44100
+        self.channels = 2
+        
         # Typewriter effect variables
-        self.typing_speed = 0.05  # Increased from 0.03
+        self.typing_speed = 0.1  # Increased from 0.05
         self.typing_timer = 0
         self.text_index = 0
         self.current_text = ""
@@ -112,6 +128,11 @@ class CardFlipAnimation(arcade.View):
         # Load textures
         self.load_textures()
         
+        # Load sound effects
+        sound_path = os.path.join(self.assets_dir, "sound", "clonck.wav")
+        if os.path.exists(sound_path):
+            self.clonck_sound = arcade.load_sound(sound_path)
+        
         # Calculate background scale to fill window
         bg_width, bg_height = self.background.width, self.background.height
         window_width, window_height = self.window.width, self.window.height
@@ -157,6 +178,15 @@ class CardFlipAnimation(arcade.View):
             # Start fading text after 3 seconds
             if self.show_text and self.total_time > 3.0:
                 self.text_alpha = max(0, self.text_alpha - (delta_time * 255))  # Fade over 1 second
+            
+            # Play clonck sounds during initial delay
+            if self.clonck_sound:
+                for i, (played, time) in enumerate(zip(self.clonck_played, self.clonck_times)):
+                    if not played and self.total_time >= time:
+                        print(f"Playing initial clonck {i+1} at {self.total_time:.2f} seconds")
+                        self.play_sound(self.clonck_sound)
+                        self.clonck_played[i] = True
+            
             return
             
         if not self.flipping and not self.flip_completed:
@@ -209,16 +239,33 @@ class CardFlipAnimation(arcade.View):
             self.phase3_time += delta_time
             
             # Update typing effect
-            update_typing_effect(self, delta_time)
+            self.typing_timer += delta_time
+            if self.typing_timer >= self.typing_speed:
+                if self.text_index < len(self.current_text):
+                    self.text_index += 1
+                    self.displayed_text = self.current_text[:self.text_index]
+                    # Play typewriter sound every other character
+                    if self.text_index % 2 == 0 and self.clonck_sound:
+                        # Calculate the exact time when this character should appear
+                        typing_start_time = self.phase3_time - (self.typing_timer - self.typing_speed)
+                        print(f"Playing typewriter sound at {typing_start_time:.2f} seconds")
+                        self.play_sound(self.clonck_sound)
+                    self.typing_timer = 0
+                else:
+                    if self.current_line_index < len(self.lines_to_type) - 1:
+                        self.current_line_index += 1
+                        set_typing_text(self, self.lines_to_type[self.current_line_index])
+                    else:
+                        self.typing_complete = True
             
             # Track time since typing completed
             if self.typing_complete:
                 self.typing_complete_time += delta_time
             
-            # Start phase 4 if either:
-            # 1. Typing has been complete for 3 seconds, or
+            # Start phase 4 only if:
+            # 1. Typing has been complete for at least 3 seconds, AND
             # 2. Minimum time of 25 seconds has passed
-            if (self.typing_complete and self.typing_complete_time >= 3.0) or self.phase3_time >= 25.0:
+            if self.typing_complete and self.typing_complete_time >= 3.0 and self.phase3_time >= 25.0:
                 self.phase4_started = True
                 self.phase4_time = 0
         elif self.phase4_started and not self.animation_complete:
@@ -234,8 +281,8 @@ class CardFlipAnimation(arcade.View):
             if self.phase4_time >= 1.0:
                 self.cta_alpha = min(255, self.cta_alpha + (delta_time * 255))
             
-            # End animation after 5 seconds of showing CTA
-            if self.phase4_time >= 6.0:  # 1s fade out + 5s CTA
+            # End animation after 8 seconds of showing CTA (1s fade out + 7s CTA)
+            if self.phase4_time >= 8.0:
                 self.animation_complete = True
                 if self.recording:
                     self.window.close()
@@ -391,7 +438,7 @@ class CardFlipAnimation(arcade.View):
                 align="center"
             )
 
-    def start_recording(self, output_path: str, fps: int = 60):
+    def start_recording(self, output_path: str, fps: int = 30):
         """Start recording the animation."""
         # Reset recording state
         self.recording = False
@@ -422,7 +469,7 @@ class CardFlipAnimation(arcade.View):
             raise RuntimeError("Could not open video writer")
             
         # Set up frame timing
-        self.target_frame_time = 1.0 / fps
+        self.target_frame_time = 1.0 / (fps * 0.5)  # Slow down frame capture to half speed
         self.last_frame_time = time.time()
         self.accumulated_time = 0
 
@@ -454,17 +501,25 @@ class CardFlipAnimation(arcade.View):
             self.video_writer.write(frame_bgr)
             self.accumulated_time = 0  # Reset accumulated time
 
+    def play_sound(self, sound):
+        """Play a sound."""
+        if sound:
+            sound.play()
+
     def __del__(self):
         """Clean up resources when the object is destroyed."""
         if self.video_writer is not None:
             self.video_writer.release()
             self.video_writer = None
+        if hasattr(self, 'audio_stream'):
+            self.audio_stream.stop()
+            self.audio_stream.close()
 
 def create_card_flip_animation(
     card_name: str,
     card_orientation: str,
     output_path: str,
-    fps: int = 60,
+    fps: int = 30,  # Reduced from 60
     window_width: int = 600,
     window_height: int = 1000
 ) -> str:
@@ -494,7 +549,6 @@ def create_card_flip_animation(
         # Close the window to release resources
         window.close()
         
-        # Add music using FFmpeg
         # Get the absolute path to the music file
         script_dir = os.path.dirname(os.path.abspath(__file__))
         music_path = os.path.join(script_dir, "..", "..", "assets", "sound", "Pixel 1.wav")
@@ -514,47 +568,95 @@ def create_card_flip_animation(
                     shutil.copy2(temp_video_path, output_path)
                     return output_path
 
+                print(f"Using FFmpeg at: {ffmpeg_path}")
+                print(f"Adding music from: {music_path}")
+
                 # FFmpeg command to convert to MP4 and add audio
                 cmd = [
-                    ffmpeg_path,  # Use the full path to ffmpeg
-                    '-i', temp_video_path,  # Input video
-                    '-ss', '13.8',  # Start time in the audio
-                    '-i', music_path,  # Input audio
-                    '-c:v', 'libx264',  # Use H.264 codec
-                    '-preset', 'medium',  # Medium encoding speed
-                    '-crf', '18',  # High quality
-                    '-c:a', 'aac',  # Encode audio as AAC
-                    '-b:a', '192k',  # Audio bitrate
-                    '-shortest',  # Match duration to shortest stream (video)
-                    '-pix_fmt', 'yuv420p',  # Ensure compatibility
-                    output_path  # Output directly to final path
+                    ffmpeg_path,
+                    '-y',
+                    '-i', temp_video_path,
+                    '-i', music_path,
+                    '-c:v', 'libx264',
+                    '-preset', 'medium',
+                    '-crf', '18',
+                    '-c:a', 'aac',
+                    '-b:a', '192k',
+                    '-shortest',
+                    '-pix_fmt', 'yuv420p',
+                    '-af', 'volume=2.0',  # Increase volume
+                    output_path
                 ]
                 
-                import subprocess
+                print("Running FFmpeg command to create final video:", " ".join(cmd))
                 result = subprocess.run(cmd, check=False, capture_output=True, text=True)
                 if result.returncode != 0:
-                    print(f"FFmpeg error: {result.stderr}")
+                    print(f"FFmpeg error creating final video: {result.stderr}")
                     # If FFmpeg fails, just use the original video
                     shutil.copy2(temp_video_path, output_path)
+                else:
+                    print("Successfully created final video with audio")
                 
             except Exception as e:
                 print(f"Error processing video: {e}")
+                print("Falling back to video without audio")
                 # If anything fails, just use the original video
                 shutil.copy2(temp_video_path, output_path)
         else:
             print(f"Music file not found at: {music_path}")
+            print("Falling back to video without audio")
             # If music file doesn't exist, just use the original video
             shutil.copy2(temp_video_path, output_path)
         
         return output_path
         
     finally:
-        # Clean up temporary file
+        # Clean up temporary files
         if temp_video_path and os.path.exists(temp_video_path):
             try:
                 os.unlink(temp_video_path)
             except Exception as e:
-                print(f"Warning: Could not delete temporary video file: {e}")
+                print(f"Warning: Could not delete temporary file {temp_video_path}: {e}")
+
+def set_typing_text(game, new_text):
+    """
+    Sets the text to be typed dynamically.
+    Only resets typing if the text is different.
+    """
+    if game.current_text != new_text:  # Only reset if the text is different
+        game.current_text = new_text
+        game.displayed_text = ""  # Reset displayed text
+        game.text_index = 0       # Reset typing progress
+        game.typing_timer = 0
+
+def set_paragraph_typing(game, paragraph, font_size=18, font_name = "Old School Adventures", color=arcade.color.WHITE, width = 600):
+    """
+    Sets up the typing effect for a multi-line paragraph.
+    """
+    
+    if not game.lines_to_type or game.current_text != paragraph:  # Prevent resetting
+        lines = []
+        for block in paragraph.split("\n\n"):  # Split into paragraphs
+            wrapped_lines = textwrap.wrap(block, width= width // font_size)
+            lines.extend(wrapped_lines + [""])  # Add wrapped lines and an empty line for spacing
+
+        game.lines_to_type = lines  # Store all lines
+        game.current_line_index = 0  # Start from the first line
+        game.line_widths = []
+        for line in game.lines_to_type:  ## This measure the pixel width of each line dynamically
+            text_image = arcade.create_text_image(
+                text=line,
+                font_size=font_size,
+                font_name=font_name,
+                text_color=color,
+                align= "center"
+            )
+            line_width = text_image.width * 1.5 ##Account for the fonts larger size and glyph boxes
+          
+            game.line_widths.append(line_width) 
+            
+        
+        set_typing_text(game, game.lines_to_type[0])
 
 if __name__ == "__main__":
     # Test the animation
@@ -571,7 +673,7 @@ if __name__ == "__main__":
         card_name=card_name,
         card_orientation=card_orientation,
         output_path=output_path,
-        fps=60,
+        fps=30,
         window_width=600,
         window_height=1000
     )
