@@ -16,19 +16,18 @@ from text_utility import (
 )
 from reading_generator import ReadingGenerator
 from card_selector import CardSelector
-import time
 
-class CardFlipAnimation(arcade.View):
+class CardFlipAnimation:
     def __init__(self, assets_dir: str = "assets"):
-        super().__init__()
         self.assets_dir = assets_dir
         self.card_size = (300, 500)  # Match the CSS dimensions
+        self.window = None
         self.card_front = None
         self.card_back = None
         self.background = None
         self.angle = 0
         self.flipping = False
-        self.flip_duration = 2.0  # Increased from 1.5 seconds
+        self.flip_duration = .75  # seconds
         self.current_time = 0
         self.frames = []
         self.recording = False
@@ -38,7 +37,7 @@ class CardFlipAnimation(arcade.View):
         self.show_text = True  # Show text immediately
         self.text_alpha = 255
         self.text_display_time = 0  # Track how long text has been shown
-        self.initial_delay = 6.0  # Increased from 4 seconds
+        self.initial_delay = 3  # 3 second delay before flip starts
         self.total_time = 0  # Track total elapsed time
         self.flip_complete_time = 0  # Track time since flip completed
         self.flip_completed = False  # Track if flip has completed
@@ -46,11 +45,10 @@ class CardFlipAnimation(arcade.View):
         self.card_text_alpha = 0  # Alpha for card name text
         self.phase2_started = False  # Track if phase 2 has started
         self.phase2_time = 0  # Track time in phase 2
-        self.phase2_duration = 2.0  # Increased from 1.0 seconds
+        self.phase2_duration = .5  # Duration of phase 2 animation
         self.card_scale = 1.0  # Current scale of the card
         self.card_y_offset = 0  # Current y offset of the card
         self.phase3_started = False  # Track if phase 3 has started
-    
         self.phase3_time = 0  # Track time in phase 3
         self.description_alpha = 0  # Alpha for description text
         self.phase4_started = False  # Track if phase 4 has started
@@ -59,7 +57,7 @@ class CardFlipAnimation(arcade.View):
         self.cta_alpha = 0  # Alpha for CTA text
         
         # Typewriter effect variables
-        self.typing_speed = 0.05  # Increased from 0.03
+        self.typing_speed = 0.02  # Time between characters
         self.typing_timer = 0
         self.text_index = 0
         self.current_text = ""
@@ -106,6 +104,13 @@ class CardFlipAnimation(arcade.View):
 
     def setup(self):
         """Set up the animation window and load resources."""
+        # Create a window
+        self.window = arcade.Window(
+            width=self.card_size[0] * 2,
+            height=self.card_size[1] * 2,
+            title="Card Flip Animation"
+        )
+        
         # Set background color
         arcade.set_background_color(arcade.color.WHITE)
         
@@ -154,8 +159,8 @@ class CardFlipAnimation(arcade.View):
         
         # Don't start flipping until initial delay is over
         if self.total_time < self.initial_delay:
-            # Start fading text after 3 seconds
-            if self.show_text and self.total_time > 3.0:
+            # Start fading text after 1.5 seconds (adjusted from 2.0)
+            if self.show_text and self.total_time > 1.5:
                 self.text_alpha = max(0, self.text_alpha - (delta_time * 255))  # Fade over 1 second
             return
             
@@ -177,11 +182,11 @@ class CardFlipAnimation(arcade.View):
                 self.angle = 180  # Keep card fully flipped
         elif self.flip_completed and not self.phase2_started:
             self.flip_complete_time += delta_time
-            # Fade in card name text over 1 second
-            self.card_text_alpha = min(255, self.card_text_alpha + (delta_time * 255))
+            # Fade in card name text over 0.5 seconds
+            self.card_text_alpha = min(255, self.card_text_alpha + (delta_time * 510))  # 510 = 255/0.5
             
-            # Start phase 2 after 3 seconds of showing completed flip
-            if self.flip_complete_time >= 3.0:
+            # Start phase 2 after 2 seconds of showing completed flip
+            if self.flip_complete_time >= 2.0:
                 self.phase2_started = True
                 self.phase2_time = 0
         elif self.phase2_started and not self.phase3_started:
@@ -216,26 +221,26 @@ class CardFlipAnimation(arcade.View):
                 self.typing_complete_time += delta_time
             
             # Start phase 4 if either:
-            # 1. Typing has been complete for 3 seconds, or
-            # 2. Minimum time of 25 seconds has passed
-            if (self.typing_complete and self.typing_complete_time >= 3.0) or self.phase3_time >= 25.0:
+            # 1. Typing has been complete for 2 seconds, or
+            # 2. Minimum time of 18 seconds has passed (increased from 16)
+            if (self.typing_complete and self.typing_complete_time >= 2.0) or self.phase3_time >= 18.0:
                 self.phase4_started = True
                 self.phase4_time = 0
         elif self.phase4_started and not self.animation_complete:
             self.phase4_time += delta_time
             
-            # Fade out everything over 1 second
-            if self.phase4_time < 1.0:
-                self.fade_out_alpha = max(0, self.fade_out_alpha - (delta_time * 255))
+            # Fade out everything over 0.5 seconds
+            if self.phase4_time < 0.5:
+                self.fade_out_alpha = max(0, self.fade_out_alpha - (delta_time * 510))
                 self.card_text_alpha = self.fade_out_alpha
                 self.description_alpha = self.fade_out_alpha
             
             # Fade in CTA text after fade out completes
-            if self.phase4_time >= 1.0:
-                self.cta_alpha = min(255, self.cta_alpha + (delta_time * 255))
+            if self.phase4_time >= 0.5:
+                self.cta_alpha = min(255, self.cta_alpha + (delta_time * 510))
             
-            # End animation after 5 seconds of showing CTA
-            if self.phase4_time >= 6.0:  # 1s fade out + 5s CTA
+            # End animation after 3 seconds of showing CTA
+            if self.phase4_time >= 4.5:  # 0.5s fade out + 4s CTA (increased from 3.5)
                 self.animation_complete = True
                 if self.recording:
                     self.window.close()
@@ -390,60 +395,9 @@ class CardFlipAnimation(arcade.View):
                 outline_color=(0, 0, 0, int(self.cta_alpha)),
                 align="center"
             )
-
-    def start_recording(self, output_path: str, fps: int = 60):
-        """Start recording the animation."""
-        # Reset recording state
-        self.recording = False
-        if self.video_writer is not None:
-            self.video_writer.release()
-            self.video_writer = None
         
-        # Remove existing output file if it exists
-        try:
-            if os.path.exists(output_path):
-                os.remove(output_path)
-        except Exception as e:
-            print(f"Warning: Could not remove existing output file: {e}")
-        
-        # Start new recording
-        self.recording = True
-        # Create video writer with MJPG codec
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        self.video_writer = cv2.VideoWriter(
-            output_path,
-            fourcc,
-            fps,
-            (self.window.width, self.window.height),
-            True
-        )
-        
-        if not self.video_writer.isOpened():
-            raise RuntimeError("Could not open video writer")
-            
-        # Set up frame timing
-        self.target_frame_time = 1.0 / fps
-        self.last_frame_time = time.time()
-        self.accumulated_time = 0
-
-    def on_update(self, delta_time: float):
-        """Update the animation state."""
-        # Scale the delta_time to control animation speed
-        scaled_delta = delta_time * 0.25  # Slow down the animation to quarter speed
-        self.update(scaled_delta)
-        
-        # If recording, accumulate time for frame capture
-        if self.recording and self.video_writer is not None:
-            current_time = time.time()
-            self.accumulated_time += current_time - self.last_frame_time
-            self.last_frame_time = current_time
-
-    def on_draw(self):
-        """Draw the current state of the animation."""
-        self.draw()
-        
-        # If recording, capture the frame after drawing
-        if self.recording and self.video_writer is not None and self.accumulated_time >= self.target_frame_time:
+        # If recording, capture the frame
+        if self.recording:
             # Get the current frame as a numpy array
             frame = arcade.get_image()
             frame_array = np.array(frame)
@@ -452,127 +406,58 @@ class CardFlipAnimation(arcade.View):
             # Ensure frame is in the correct format
             frame_bgr = cv2.resize(frame_bgr, (self.window.width, self.window.height))
             self.video_writer.write(frame_bgr)
-            self.accumulated_time = 0  # Reset accumulated time
 
-    def __del__(self):
-        """Clean up resources when the object is destroyed."""
-        if self.video_writer is not None:
+    def start_recording(self, output_path: str, fps: int = 30):
+        """Start recording the animation."""
+        self.recording = True
+        # Create video writer with H.264 codec
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')  # Use H.264 codec
+        self.video_writer = cv2.VideoWriter(
+            output_path,
+            fourcc,
+            fps,
+            (self.window.width, self.window.height),
+            True  # isColor flag
+        )
+        
+        if not self.video_writer.isOpened():
+            raise RuntimeError("Could not open video writer")
+
+    def stop_recording(self):
+        """Stop recording."""
+        self.recording = False
+        if self.video_writer:
             self.video_writer.release()
             self.video_writer = None
 
-def create_card_flip_animation(
-    card_name: str,
-    card_orientation: str,
-    output_path: str,
-    fps: int = 60,
-    window_width: int = 600,
-    window_height: int = 1000
-) -> str:
-    """Create a card flip animation with the given card and save it to the output path."""
-    # Create a temporary file for the video
-    temp_video_path = None
-    try:
-        with tempfile.NamedTemporaryFile(suffix='.avi', delete=False) as temp_file:
-            temp_video_path = temp_file.name
-
-        # Create the window with mobile dimensions
-        window = arcade.Window(window_width, window_height, "Card Flip Animation")
+    def run(self, card_image_path: str = None, output_path: str = None):
+        """Run the animation and optionally record it."""
+        self.load_textures(card_image_path)
+        self.setup()
         
-        # Create and run the animation
-        animation = CardFlipAnimation(assets_dir="assets")
-        animation.setup()
+        if output_path:
+            self.start_recording(output_path)
         
-        # Set the animation as the current view
-        window.show_view(animation)
+        def on_update(delta_time):
+            self.update(delta_time)
         
-        # Start recording with the same dimensions
-        animation.start_recording(temp_video_path, fps=fps)
+        def on_draw():
+            self.draw()
         
-        # Run the animation
+        self.window.on_update = on_update
+        self.window.on_draw = on_draw
+        
         arcade.run()
         
-        # Close the window to release resources
-        window.close()
-        
-        # Add music using FFmpeg
-        # Get the absolute path to the music file
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        music_path = os.path.join(script_dir, "..", "..", "assets", "sound", "Pixel 1.wav")
-        
-        if os.path.exists(music_path):
-            try:
-                # Check if ffmpeg is installed
-                import shutil
-                ffmpeg_path = shutil.which('ffmpeg')
-                if not ffmpeg_path:
-                    print("Error: FFmpeg is not installed or not in PATH.")
-                    print("Please install FFmpeg and add it to your system PATH.")
-                    print("You can install it using:")
-                    print("1. Chocolatey: choco install ffmpeg")
-                    print("2. Or download from: https://ffmpeg.org/download.html")
-                    # Just use the original video without audio
-                    shutil.copy2(temp_video_path, output_path)
-                    return output_path
+        if output_path:
+            self.stop_recording()
 
-                # FFmpeg command to convert to MP4 and add audio
-                cmd = [
-                    ffmpeg_path,  # Use the full path to ffmpeg
-                    '-i', temp_video_path,  # Input video
-                    '-ss', '13.8',  # Start time in the audio
-                    '-i', music_path,  # Input audio
-                    '-c:v', 'libx264',  # Use H.264 codec
-                    '-preset', 'medium',  # Medium encoding speed
-                    '-crf', '18',  # High quality
-                    '-c:a', 'aac',  # Encode audio as AAC
-                    '-b:a', '192k',  # Audio bitrate
-                    '-shortest',  # Match duration to shortest stream (video)
-                    '-pix_fmt', 'yuv420p',  # Ensure compatibility
-                    output_path  # Output directly to final path
-                ]
-                
-                import subprocess
-                result = subprocess.run(cmd, check=False, capture_output=True, text=True)
-                if result.returncode != 0:
-                    print(f"FFmpeg error: {result.stderr}")
-                    # If FFmpeg fails, just use the original video
-                    shutil.copy2(temp_video_path, output_path)
-                
-            except Exception as e:
-                print(f"Error processing video: {e}")
-                # If anything fails, just use the original video
-                shutil.copy2(temp_video_path, output_path)
-        else:
-            print(f"Music file not found at: {music_path}")
-            # If music file doesn't exist, just use the original video
-            shutil.copy2(temp_video_path, output_path)
-        
-        return output_path
-        
-    finally:
-        # Clean up temporary file
-        if temp_video_path and os.path.exists(temp_video_path):
-            try:
-                os.unlink(temp_video_path)
-            except Exception as e:
-                print(f"Warning: Could not delete temporary video file: {e}")
+def create_card_flip_animation(card_image_path: str, output_path: str):
+    """Create a card flip animation and save it as a video."""
+    animation = CardFlipAnimation()
+    animation.run(card_image_path, output_path)
 
 if __name__ == "__main__":
     # Test the animation
-    print("Starting main execution...")
-    output_path = "card_flip.mp4"  # Changed back to .mp4
-    print(f"Will save output to: {output_path}")
-    
-    # Create a card selector to get random card
-    card_selector = CardSelector("assets")
-    card_name, card_orientation, _ = card_selector.select_random_card()
-    
-    # Create the animation with the selected card
-    create_card_flip_animation(
-        card_name=card_name,
-        card_orientation=card_orientation,
-        output_path=output_path,
-        fps=60,
-        window_width=600,
-        window_height=1000
-    )
-    print("Animation creation completed") 
+    animation = CardFlipAnimation()
+    animation.run(output_path="card_flip.mp4") 
