@@ -854,7 +854,7 @@ def draw_credits_screen(game):
     )
 
     TEXT.draw_outlined_line(
-        "Base Card Art by chee-seekins (itch.io/tarot)",
+        "Base Card Art by chee-seekins",
         SCREEN_WIDTH // 2,
         y_start - 140,
         font_size=16,
@@ -888,7 +888,7 @@ def draw_credits_screen(game):
     )
 
     TEXT.draw_outlined_line(
-        "Music: alkarab (itch.io)",
+        "Music: alkarab",
         SCREEN_WIDTH // 2,
         y_start - 280,
         font_size=16,
