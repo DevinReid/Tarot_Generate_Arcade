@@ -32,7 +32,6 @@ class CardFlipAnimation:
         self.flip_complete_time = 0  # Track time since flip completed
         self.flip_completed = False  # Track if flip has completed
         self.animation_complete = False  # Track if entire animation is complete
-        self.card_text_alpha = 0  # Alpha for card name text
 
     def setup(self):
         """Set up the animation window and load resources."""
@@ -106,8 +105,6 @@ class CardFlipAnimation:
                 self.angle = 180  # Keep card fully flipped
         elif self.flip_completed and not self.animation_complete:
             self.flip_complete_time += delta_time
-            # Fade in card name text over 0.5 seconds
-            self.card_text_alpha = min(255, self.card_text_alpha + (delta_time * 510))  # 510 = 255/0.5
             # End animation after 2 seconds of showing completed flip
             if self.flip_complete_time >= 2.0:
                 self.animation_complete = True
@@ -171,31 +168,6 @@ class CardFlipAnimation:
                 center_y + self.card_size[1] // 2 + 50,  # Position above card
                 (255, 255, 255, opacity),  # White with opacity
                 font_size=36,  # Smaller font size
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
-            )
-
-        # Draw card name and orientation after flip completes
-        if self.flip_completed and self.card_text_alpha > 0:
-            # Draw card name
-            arcade.draw_text(
-                "Seven of Cups",
-                self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 70,  # Position above card
-                (255, 255, 255, int(self.card_text_alpha)),  # White with fade in
-                font_size=32,  # Slightly smaller font size
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
-            )
-            # Draw orientation
-            arcade.draw_text(
-                "Upright",
-                self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 30,  # Position below card name
-                (255, 255, 255, int(self.card_text_alpha)),  # White with fade in
-                font_size=28,  # Even smaller font size for orientation
                 anchor_x="center",
                 anchor_y="center",
                 font_name="Old School Adventures"
