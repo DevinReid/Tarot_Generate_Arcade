@@ -17,21 +17,13 @@ class CardFlipAnimation:
         self.background = None
         self.angle = 0
         self.flipping = False
-        self.flip_duration = 1  # seconds
+        self.flip_duration = 2.0  # seconds
         self.current_time = 0
         self.frames = []
         self.recording = False
         self.temp_dir = None
         self.video_writer = None
         self.delay_counter = 0
-        self.show_text = True  # Show text immediately
-        self.text_alpha = 255
-        self.text_display_time = 0  # Track how long text has been shown
-        self.initial_delay = 3.0  # 3 second delay before flip starts
-        self.total_time = 0  # Track total elapsed time
-        self.flip_complete_time = 0  # Track time since flip completed
-        self.flip_completed = False  # Track if flip has completed
-        self.animation_complete = False  # Track if entire animation is complete
 
     def setup(self):
         """Set up the animation window and load resources."""
@@ -54,10 +46,6 @@ class CardFlipAnimation:
         bg_path = os.path.join(self.assets_dir, "background.png")
         self.background = arcade.load_texture(bg_path)
         
-        # Load font
-        font_path = os.path.join(self.assets_dir, "fonts", "OldSchoolAdventures-42j9.ttf")
-        arcade.load_font(font_path)
-        
         # Load back texture
         back_path = os.path.join(self.assets_dir, "cards", "back.png")
         self.card_back = arcade.load_texture(back_path)
@@ -78,38 +66,21 @@ class CardFlipAnimation:
 
     def update(self, delta_time: float):
         """Update the animation state."""
-        self.total_time += delta_time
-        
-        # Don't start flipping until initial delay is over
-        if self.total_time < self.initial_delay:
-            # Start fading text after 2 seconds
-            if self.show_text and self.total_time > 2.0:
-                self.text_alpha = max(0, self.text_alpha - (delta_time * 255))  # Fade over 1 second
+        if self.delay_counter < 15:  # Wait for 15 frames before starting
+            self.delay_counter += 1
             return
-            
-        if not self.flipping and not self.flip_completed:
-            self.flipping = True
-            self.current_time = 0
-            
-        if self.flipping:
-            self.current_time += delta_time
-            progress = min(1.0, self.current_time / self.flip_duration)
-            
-            # Calculate rotation angle (0 to 180 degrees)
-            self.angle = progress * 180
-            
-            if progress >= 1.0:
-                self.flipping = False
-                self.flip_completed = True
-                self.flip_complete_time = 0
-                self.angle = 180  # Keep card fully flipped
-        elif self.flip_completed and not self.animation_complete:
-            self.flip_complete_time += delta_time
-            # End animation after 2 seconds of showing completed flip
-            if self.flip_complete_time >= 2.0:
-                self.animation_complete = True
-                if self.recording:
-                    self.window.close()
+
+        if not self.flipping:
+            return
+
+        self.current_time += delta_time
+        progress = min(1.0, self.current_time / self.flip_duration)
+        
+        # Calculate rotation angle (0 to 180 degrees)
+        self.angle = progress * 180
+        
+        if progress >= 1.0:
+            self.flipping = False
 
     def draw(self):
         """Draw the current state of the animation."""
@@ -148,29 +119,6 @@ class CardFlipAnimation:
                 self.card_size[1],
                 self.card_front,
                 angle=0
-            )
-        
-        # Draw text if visible (after the card)
-        if self.show_text and self.text_alpha > 0:
-            # Create semi-transparent background for text
-            arcade.draw_rectangle_filled(
-                self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 50,  # Position above card
-                self.window.width,
-                60,  # Smaller height for smaller text
-                (0, 0, 0, int(self.text_alpha * 0.5))
-            )
-            # Draw text in white with opacity
-            opacity = int(self.text_alpha)
-            arcade.draw_text(
-                "Daily Tarot",
-                self.window.width // 2,
-                center_y + self.card_size[1] // 2 + 50,  # Position above card
-                (255, 255, 255, opacity),  # White with opacity
-                font_size=36,  # Smaller font size
-                anchor_x="center",
-                anchor_y="center",
-                font_name="Old School Adventures"
             )
         
         # If recording, capture the frame
@@ -215,8 +163,12 @@ class CardFlipAnimation:
         if output_path:
             self.start_recording(output_path)
         
+        self.start_flip()
+        
         def on_update(delta_time):
             self.update(delta_time)
+            if not self.flipping and self.recording:
+                self.window.close()
         
         def on_draw():
             self.draw()
