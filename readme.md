@@ -23,9 +23,9 @@ Tarot Card Arcade game using python arcade and chatgpt. This directory contains 
 # Compile Game 
 Follow the below instructions to compile the game: 
 1. Ensure you're in the  `python-game` directory 
-2. If you're on windows run the command `$pyinstaller --onefile --windowed --clean --noupx --add-data "assets;assets" --icon=icon.ico --name "TarotGame_v1.0.4" game.py`.
-If you're on Mac use `$ pyinstaller --onefile  --windowed --clean --noupx --name "TarotGame_v1.0.4" --icon "icon.icns"  --add-data "assets:assets" game.py`
-On mac try this, then replace above if it works. `$ pyinstaller --onefile  --windowed --clean --noupx --name "TarotGame_v1.0.4" --icon "icon.icns"  --add-data "assets:assets" game.py`
+2. If you're on windows run the command `$pyinstaller --onefile --clean --noupx --windowed --add-data "assets;assets" --icon=icon.ico --name "TarotGame_v1.0.4" game.py`.
+If you're on Mac use `$ pyinstaller --onefile  --windowed --name "TarotGame_v1.0.4" --icon "icon.icns"  --add-data "assets:assets" game.py` 
+
 3. You'll find the resulting executable in the  `/dist/` folder
 
 
