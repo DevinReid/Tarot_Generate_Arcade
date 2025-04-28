@@ -3,6 +3,7 @@ Tarot Card Arcade game using python arcade and chatgpt. This directory contains 
 
 # Get started instructions 
 * As a prerequisite be sure you have python installed with `$ python --version`. The project supports python 3.12.4. You'll also need Postgres installed, you can check the installation of that by using `$ psql --version`.
+
 # Server instructions
 1. In a new terminal go to the flask server directory with `$ cd server-engine`
 2. Copy the environment files `cp -a .env.example .env` and fill out the applicable variables 
@@ -11,6 +12,10 @@ Tarot Card Arcade game using python arcade and chatgpt. This directory contains 
 5. Install the packages using `$ pip install -r requirements.txt`
 6. Start the server with by running `$ flask --debug run`
 7. See server running on http://localhost:5000/
+
+# Server Deployment
+The server is deployed on [Render](https://render.com/) and automatically deploys when there is a code change in the `/server-engine` directory that is merged to `main`. Render executes the following command after deploy to start the server.
+`$ gunicorn --workers 3 --threads 4 app:app`
 
 # Game instructions 
 1. In a new terminal, go into the python game directory `$ cd python-game` 
