@@ -23,9 +23,20 @@ Tarot Card Arcade game using python arcade and chatgpt. This directory contains 
 # Compile Game 
 Follow the below instructions to compile the game: 
 1. Ensure you're in the  `python-game` directory 
-2. If you're on windows run the command `$pyinstaller --onefile --windowed --add-data "assets;assets" --icon=icon.ico --name "TarotGame_v1.0.3" game.py`.
-If you're on Mac use `$ pyinstaller --onefile  --windowed --name "TarotGame_v1.0.3" --icon "icon.icns"  --add-data "assets:assets" game.py` 
+2. If you're on windows run the command `$pyinstaller --onefile --windowed --clean --noupx --add-data "assets;assets" --icon=icon.ico --name "TarotGame_v1.0.4" game.py`.
+If you're on Mac use `$ pyinstaller --onefile  --windowed --clean --noupx --name "TarotGame_v1.0.4" --icon "icon.icns"  --add-data "assets:assets" game.py`
+On mac try this, then replace above if it works. `$ pyinstaller --onefile  --windowed --clean --noupx --name "TarotGame_v1.0.4" --icon "icon.icns"  --add-data "assets:assets" game.py`
 3. You'll find the resulting executable in the  `/dist/` folder
+
+
+# Load build to Steam
+1. Open build.vdf and edit the version numbers to match the dist files
+2. Navigate to your C:\SteamPipe\ directory, Also must be in Command Prompt
+3. Check that there are only the two most recent builds and the run.sh file
+4. Login to the Steam Console Command using `steamcmd.exe +login <username>`
+5. Run the build script: `run_app_build "C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\steam-deploy\build.vdf"`
+6. Visit (https://partner.steamgames.com/apps/builds/3582900) and change the build to 'default' branch, preview, and set build live
+7. Visit (https://partner.steamgames.com/apps/config/3582900) and ensure the file/version matches the .exe build
 
 # Resources
 * CardArt base from [chee-seekins](https://chee-seekins.itch.io/tarot) - note, files not in git. commercial use, no distribution 
