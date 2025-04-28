@@ -1,13 +1,13 @@
-[2025-04-15 14:29:02]: Starting build for depot 3582901, content path is "C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\python-game\dist", build flags 0x0
-[2025-04-15 14:29:02]: Building file listing for depot 3582901 ...
-[2025-04-15 14:29:02]: Found 1 files for mapping: C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\python-game\dist * -> .
-[2025-04-15 14:29:02]: Found 1 files (61 MB) for depot 3582901
-[2025-04-15 14:29:03]: Building depot 3582901, baseline manifest 7803766712164976241 (1 files)
-[2025-04-15 14:29:03]: Found 64 new chunks ( 64 used previously ) for depot 3582901, took 0 minutes, 0 seconds
-[2025-04-15 14:29:03]: Changes to baseline manifest 7803766712164976241 :
-[2025-04-15 14:29:03]: Added  : "TarotGame_v1.0.3.exe" 62703 KB 
-[2025-04-15 14:29:03]: Removed: TarotGame_v1.0.2.exe (62703 KB)
-[2025-04-15 14:29:03]: Summary: 1 files added (61.23 MB), 0 files changed (0 bytes), 1 files removed (61.23 MB)
-[2025-04-15 14:29:03]: Uploading new manifest to 208.78.164.214:80 (handle 16794711830785677864, 2397 bytes).
-[2025-04-15 14:29:04]: Uploading 9 out of 9 missing chunks.
-[2025-04-15 14:29:07]: Success! New manifestID 2168374131915760299 created and 9 new chunks uploaded.
+[2025-04-28 17:25:57]: Starting build for depot 3582901, content path is "C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\python-game\dist", build flags 0x0
+[2025-04-28 17:25:57]: Building file listing for depot 3582901 ...
+[2025-04-28 17:25:57]: Found 1 files for mapping: C:\Users\Dreid\Desktop\Brain\Projects\Tarot_Generate_Arcade\python-game\dist * -> .
+[2025-04-28 17:25:57]: Found 1 files (66 MB) for depot 3582901
+[2025-04-28 17:25:58]: Building depot 3582901, baseline manifest 2168374131915760299 (1 files)
+[2025-04-28 17:25:59]: Found 70 new chunks ( 64 used previously ) for depot 3582901, took 0 minutes, 1 seconds
+[2025-04-28 17:25:59]: Changes to baseline manifest 2168374131915760299 :
+[2025-04-28 17:25:59]: Added  : "TarotGame_v1.0.4.exe" 67935 KB 
+[2025-04-28 17:25:59]: Removed: TarotGame_v1.0.3.exe (62703 KB)
+[2025-04-28 17:25:59]: Summary: 1 files added (66.34 MB), 0 files changed (0 bytes), 1 files removed (61.23 MB)
+[2025-04-28 17:25:59]: Uploading new manifest to 208.78.164.214:80 (handle 491462300806924108, 2594 bytes).
+[2025-04-28 17:25:59]: Uploading 25 out of 25 missing chunks.
+[2025-04-28 17:26:03]: Success! New manifestID 8504890548656449164 created and 25 new chunks uploaded.
