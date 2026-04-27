@@ -62,7 +62,7 @@ def fortune():
         # === 1. CALL OPENAI API ===
         openai_client = openai.Client(api_key=os.getenv('OPENAI_API_KEY'))
         resp = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             messages=[
                 {
                     "role": "system", 
